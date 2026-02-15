@@ -10,7 +10,7 @@
   <style>
     :root { --bg: #0a0a0f; --surface: #14141c; --surface-hover: #1e1e2a; --border: #2a2a3a; --text: #e8e8f0; --text-muted: #7878a0; --accent: #7c5cff; --accent-hover: #9278ff; --accent-glow: rgba(124,92,255,0.3); --red: #e53030; --correct: #22c55e; --wrong: #ef4444; --radius: 14px; --radius-sm: 10px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
     /* Floating background orbs */
     .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
     .bg-glow.orb1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,92,255,0.18), transparent 70%); top: -10%; left: -10%; animation: float1 12s ease-in-out infinite; }
@@ -90,6 +90,19 @@
     .result-text span { color: var(--text-muted); font-size: 0.85rem; }
     /* Confetti canvas */
     #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+    /* PBQ 3 mobile layout */
+    @media (max-width: 600px) {
+      .app { padding: 1rem; overflow-x: hidden; }
+      .pbq-card { padding: 1rem; overflow-x: hidden; }
+      .match-area { grid-template-columns: 1fr; gap: 1rem; min-width: 0; }
+      .match-column { min-width: 0; }
+      .match-column h3 { word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
+      .match-row { flex-wrap: wrap; min-width: 0; }
+      .match-row .port { flex: 1 1 100%; margin-bottom: 0.25rem; }
+      .match-row .drop-zone { min-width: 80px; flex: 1 1 auto; }
+      .chips-pool { min-width: 0; }
+    }
   </style>
 </head>
 <body>
