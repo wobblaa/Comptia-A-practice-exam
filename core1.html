@@ -8,78 +8,106 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root { --bg: #0f0f12; --surface: #18181d; --surface-hover: #222228; --border: #2a2a32; --text: #e8e8ed; --text-muted: #8888a0; --accent: #7c5cff; --accent-hover: #9278ff; --correct: #22c55e; --wrong: #ef4444; --radius: 12px; --radius-sm: 8px; }
+    :root { --bg: #0a0a0f; --surface: #14141c; --surface-hover: #1e1e2a; --border: #2a2a3a; --text: #e8e8f0; --text-muted: #7878a0; --accent: #7c5cff; --accent-hover: #9278ff; --accent-glow: rgba(124,92,255,0.3); --red: #e53030; --correct: #22c55e; --wrong: #ef4444; --radius: 14px; --radius-sm: 10px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
-    .app { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
-    .back-link:hover { color: var(--text); }
-    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .quiz-progress { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
-    .section-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 1.5rem 0 0.75rem; }
-    .pbq-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; }
-    .pbq-card h2 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
-    .scenario { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 1rem; white-space: pre-wrap; }
+    /* Floating background orbs */
+    .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .bg-glow.orb1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,92,255,0.18), transparent 70%); top: -10%; left: -10%; animation: float1 12s ease-in-out infinite; }
+    .bg-glow.orb2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(92,225,255,0.10), transparent 70%); bottom: -15%; right: -10%; animation: float2 15s ease-in-out infinite; }
+    .bg-glow.orb3 { width: 250px; height: 250px; background: radial-gradient(circle, rgba(229,48,48,0.10), transparent 70%); top: 40%; right: 10%; animation: float3 10s ease-in-out infinite; }
+    @keyframes float1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px,40px); } }
+    @keyframes float2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-50px,-30px); } }
+    @keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px,20px) scale(1.2); } }
+    .grid-overlay { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+    .app { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem; color: var(--text-muted); font-size: 0.85rem; text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 100px; transition: all 0.2s; }
+    .back-link:hover { color: var(--text); background: var(--surface); }
+    .exam-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; }
+    .quiz-progress { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    /* Progress bar */
+    .progress-bar-wrap { width: 100%; height: 4px; background: var(--border); border-radius: 4px; margin-bottom: 1.5rem; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #5ce1ff); border-radius: 4px; transition: width 0.4s ease; }
+    .section-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 2rem 0 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .pbq-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; transition: border-color 0.3s; }
+    .pbq-card:hover { border-color: rgba(124,92,255,0.3); }
+    .pbq-card h2 { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+    .scenario { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin-bottom: 1rem; white-space: pre-wrap; line-height: 1.6; }
     .field { margin-bottom: 1rem; }
-    .field label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.35rem; }
-    .field select { width: 100%; padding: 0.65rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; cursor: pointer; }
-    .field select:focus { outline: none; border-color: var(--accent); }
+    .field label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.4rem; }
+    .field select { width: 100%; padding: 0.7rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; cursor: pointer; transition: border-color 0.2s; }
+    .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,0.15); }
     .mc-options { display: flex; flex-direction: column; gap: 0.5rem; }
     .mc-option { display: block; width: 100%; padding: 0.85rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
     .mc-option:hover { border-color: var(--accent); background: var(--surface-hover); }
     .mc-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
-    .multiselect-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .multiselect-hint { font-size: 0.82rem; color: var(--accent); margin-bottom: 0.5rem; font-weight: 500; }
     .checkbox-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; }
     .checkbox-option:hover { border-color: var(--accent); }
     .checkbox-option input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
-    .match-area { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
-    .match-column h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .match-area { display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; margin-top: 0.75rem; }
+    .match-column h3 { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
     .match-slots { display: flex; flex-direction: column; gap: 0.5rem; }
-    .match-row { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); }
-    .match-row.drag-over { border-color: var(--accent); background: rgba(124, 92, 255, 0.1); }
-    .match-row .port { font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 2.5rem; }
-    .match-row .drop-zone { flex: 1; min-height: 32px; }
-    .draggable-chip { padding: 0.4rem 0.75rem; background: var(--accent); color: white; border-radius: var(--radius-sm); font-size: 0.85rem; cursor: grab; user-select: none; }
+    .match-row { display: flex; align-items: center; gap: 0.5rem; min-height: 48px; padding: 0.5rem 0.6rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); transition: all 0.2s; }
+    .match-row.drag-over { border-color: var(--accent); background: rgba(124, 92, 255, 0.1); transform: scale(1.01); }
+    .match-row .port { font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 2.5rem; flex-shrink: 1; }
+    .match-row .drop-zone { flex: 1; min-height: 32px; min-width: 110px; }
+    .draggable-chip { padding: 0.4rem 0.75rem; background: var(--accent); color: white; border-radius: var(--radius-sm); font-size: 0.82rem; cursor: grab; user-select: none; transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap; display: inline-block; }
+    .draggable-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
     .draggable-chip:active { cursor: grabbing; }
     .draggable-chip.dragging { opacity: 0.6; }
     .chips-pool { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-    .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
-    .quiz-question h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.4; }
-    .quiz-option { display: block; width: 100%; padding: 1rem 1.25rem; margin-bottom: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; transition: border-color 0.3s; }
+    .quiz-question:hover { border-color: rgba(124,92,255,0.2); }
+    .quiz-question h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.5; }
+    .quiz-option { display: block; width: 100%; padding: 0.9rem 1.25rem; margin-bottom: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
     .quiz-option:hover { border-color: var(--accent); background: var(--surface-hover); }
-    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
-    .finish-row { margin-top: 1.5rem; display: flex; justify-content: center; }
-    .btn { padding: 0.9rem 2rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 500; cursor: pointer; background: var(--accent); color: white; }
-    .btn:hover { background: var(--accent-hover); }
-    .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; }
-    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
-    .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; text-align: center; margin-bottom: 1.5rem; }
-    .score-big { font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); margin-bottom: 0.25rem; }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); box-shadow: 0 0 0 1px rgba(124,92,255,0.3); }
+    .finish-row { margin-top: 2rem; display: flex; justify-content: center; }
+    .btn { padding: 1rem 2.5rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6040dd); color: white; transition: all 0.3s; box-shadow: 0 4px 16px rgba(124,92,255,0.25); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,255,0.35); }
+    .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; box-shadow: none; border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); transform: none; box-shadow: none; }
+    .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; text-align: center; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+    .results-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #5ce1ff, var(--accent)); }
+    .score-big { font-size: 3.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 0.25rem; }
+    .score-big.pass-color { color: var(--correct); }
+    .score-big.fail-color { color: var(--wrong); }
     .score-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
-    .score-breakdown { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-    .score-pass { color: var(--correct); font-weight: 600; }
-    .score-fail { color: var(--wrong); font-weight: 600; }
-    .exam-timer { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; }
-    .exam-timer.low { color: var(--wrong); }
-    .exam-timer .timer-label { color: var(--text-muted); font-family: inherit; font-size: 0.8rem; }
-    .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); text-align: left; }
+    .score-breakdown { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: var(--bg); border-radius: var(--radius-sm); display: inline-block; }
+    .score-pass { color: var(--correct); font-weight: 600; font-size: 1.1rem; }
+    .score-fail { color: var(--wrong); font-weight: 600; font-size: 1.1rem; }
+    .exam-timer { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; }
+    .exam-timer.low { color: var(--wrong); border-color: rgba(239,68,68,0.3); }
+    .exam-timer .timer-label { color: var(--text-muted); font-family: 'DM Sans', system-ui, sans-serif; font-size: 0.8rem; }
+    .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); text-align: left; }
     .result-item:last-child { border-bottom: none; }
-    .result-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
-    .result-icon.correct { background: rgba(34, 197, 94, 0.2); color: var(--correct); }
-    .result-icon.wrong { background: rgba(239, 68, 68, 0.2); color: var(--wrong); }
-    .result-text strong { display: block; margin-bottom: 0.25rem; }
-    .result-text span { color: var(--text-muted); font-size: 0.9rem; }
+    .result-icon { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+    .result-icon.correct { background: rgba(34, 197, 94, 0.15); color: var(--correct); }
+    .result-icon.wrong { background: rgba(239, 68, 68, 0.15); color: var(--wrong); }
+    .result-text strong { display: block; margin-bottom: 0.25rem; font-size: 0.95rem; }
+    .result-text span { color: var(--text-muted); font-size: 0.85rem; }
+    /* Confetti canvas */
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
   </style>
 </head>
 <body>
+  <div class="bg-glow orb1"></div>
+  <div class="bg-glow orb2"></div>
+  <div class="bg-glow orb3"></div>
+  <div class="grid-overlay"></div>
   <div class="app">
-    <a href="index.html" class="back-link">← Back to home</a>
-    <h1>CompTIA A+ Core 1</h1>
+    <a href="index.html" class="back-link">&larr; Back to home</a>
+    <div class="exam-header">
+      <h1>CompTIA A+ Core 1</h1>
+    </div>
     <div class="exam-timer" id="exam-timer">
       <span class="timer-label">Time remaining</span>
       <span id="timer-display">90:00</span>
     </div>
     <p class="quiz-progress" id="quiz-progress"></p>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar"></div></div>
 
     <div id="pbq-section">
       <div class="section-label">Performance-based questions (PBQs)</div>
@@ -358,10 +386,52 @@ All other pins straight.</div>
 
     const chipsPool = document.getElementById('chips-pool');
     const dropZones = document.querySelectorAll('.drop-zone');
+
+    // Helper: find drop zone or pool under a point
+    function getDropTargetAt(x, y) {
+      const els = document.elementsFromPoint(x, y);
+      for (const el of els) {
+        if (el.classList && el.classList.contains('drop-zone')) return { type: 'zone', el: el };
+        if (el.id === 'chips-pool' || (el.closest && el.closest('#chips-pool'))) return { type: 'pool', el: chipsPool };
+      }
+      return null;
+    }
+
+    // Helper: drop chip onto a zone (shared by mouse and touch)
+    function dropChipOnZone(chip, zone) {
+      const port = zone.dataset.port;
+      if (zone.firstChild) {
+        const old = zone.firstChild;
+        const oldProtocol = old.dataset.protocol;
+        delete matchAssignments[port];
+        old.remove();
+        const back = document.createElement('span');
+        back.textContent = oldProtocol;
+        back.dataset.protocol = oldProtocol;
+        makeChipDraggable(back);
+        chipsPool.appendChild(back);
+      }
+      chip.remove();
+      zone.appendChild(chip);
+      matchAssignments[port] = chip.dataset.protocol;
+    }
+
+    // Helper: return chip to pool from a zone
+    function returnChipToPool(chip) {
+      if (chip.parentElement && chip.parentElement.classList.contains('drop-zone')) {
+        const port = chip.parentElement.dataset.port;
+        delete matchAssignments[port];
+        chip.parentElement.removeChild(chip);
+      }
+      chipsPool.appendChild(chip);
+    }
+
     function makeChipDraggable(chip) {
       chip.draggable = true;
       chip.dataset.protocol = chip.textContent.trim();
       chip.classList.add('draggable-chip');
+
+      // --- Mouse drag-and-drop ---
       chip.addEventListener('dragstart', e => {
         e.dataTransfer.setData('text/plain', chip.dataset.protocol);
         e.dataTransfer.effectAllowed = 'move';
@@ -369,30 +439,72 @@ All other pins straight.</div>
         draggedChip = chip;
       });
       chip.addEventListener('dragend', () => { chip.classList.remove('dragging'); draggedChip = null; });
+
+      // --- Touch drag-and-drop ---
+      let touchClone = null;
+      let touchStarted = false;
+      let lastHighlight = null;
+
+      chip.addEventListener('touchstart', e => {
+        e.preventDefault();
+        touchStarted = true;
+        draggedChip = chip;
+        const touch = e.touches[0];
+        // Create a floating clone to follow the finger
+        touchClone = chip.cloneNode(true);
+        touchClone.style.position = 'fixed';
+        touchClone.style.zIndex = '10000';
+        touchClone.style.pointerEvents = 'none';
+        touchClone.style.opacity = '0.85';
+        touchClone.style.transform = 'scale(1.1)';
+        touchClone.style.left = (touch.clientX - 50) + 'px';
+        touchClone.style.top = (touch.clientY - 20) + 'px';
+        document.body.appendChild(touchClone);
+        chip.style.opacity = '0.3';
+      }, { passive: false });
+
+      chip.addEventListener('touchmove', e => {
+        if (!touchStarted || !touchClone) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        touchClone.style.left = (touch.clientX - 50) + 'px';
+        touchClone.style.top = (touch.clientY - 20) + 'px';
+        // Highlight drop target
+        if (lastHighlight) { lastHighlight.closest('.match-row').classList.remove('drag-over'); lastHighlight = null; }
+        const target = getDropTargetAt(touch.clientX, touch.clientY);
+        if (target && target.type === 'zone') { target.el.closest('.match-row').classList.add('drag-over'); lastHighlight = target.el; }
+      }, { passive: false });
+
+      chip.addEventListener('touchend', e => {
+        if (!touchStarted) return;
+        touchStarted = false;
+        chip.style.opacity = '';
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+        if (lastHighlight) { lastHighlight.closest('.match-row').classList.remove('drag-over'); lastHighlight = null; }
+        const touch = e.changedTouches[0];
+        const target = getDropTargetAt(touch.clientX, touch.clientY);
+        if (target && target.type === 'zone') {
+          dropChipOnZone(chip, target.el);
+        } else if (target && target.type === 'pool') {
+          if (chip.parentElement && chip.parentElement.classList.contains('drop-zone')) {
+            returnChipToPool(chip);
+          }
+        }
+        draggedChip = null;
+      }, { passive: false });
     }
+
     document.querySelectorAll('#chips-pool .draggable-chip').forEach(makeChipDraggable);
+
+    // --- Mouse drop zone handlers ---
     dropZones.forEach(zone => {
       zone.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; zone.closest('.match-row').classList.add('drag-over'); });
       zone.addEventListener('dragleave', () => zone.closest('.match-row').classList.remove('drag-over'));
       zone.addEventListener('drop', e => {
         e.preventDefault();
         zone.closest('.match-row').classList.remove('drag-over');
-        const port = zone.dataset.port;
-        if (zone.firstChild) {
-          const old = zone.firstChild;
-          const oldProtocol = old.dataset.protocol;
-          delete matchAssignments[port];
-          old.remove();
-          const back = document.createElement('span');
-          back.textContent = oldProtocol;
-          back.dataset.protocol = oldProtocol;
-          makeChipDraggable(back);
-          chipsPool.appendChild(back);
-        }
         if (draggedChip) {
-          draggedChip.remove();
-          zone.appendChild(draggedChip);
-          matchAssignments[port] = draggedChip.dataset.protocol;
+          dropChipOnZone(draggedChip, zone);
           draggedChip = null;
         }
       });
@@ -401,10 +513,7 @@ All other pins straight.</div>
     chipsPool.addEventListener('drop', e => {
       e.preventDefault();
       if (draggedChip && draggedChip.parentElement && draggedChip.parentElement.classList.contains('drop-zone')) {
-        const port = draggedChip.parentElement.dataset.port;
-        delete matchAssignments[port];
-        draggedChip.parentElement.removeChild(draggedChip);
-        chipsPool.appendChild(draggedChip);
+        returnChipToPool(draggedChip);
       }
     });
 
@@ -441,7 +550,7 @@ All other pins straight.</div>
         const opts = q.options.filter(o => o && o.trim());
         const block = document.createElement('div');
         block.className = 'quiz-question';
-        const hint = q.multiSelect ? '<p style="color:#6366f1;font-size:0.85rem;margin:0.25rem 0 0.5rem;">(Select all that apply)</p>' : '';
+        const hint = q.multiSelect ? '<p class="multiselect-hint" style="margin:0.25rem 0 0.5rem;">(Select all that apply)</p>' : '';
         block.innerHTML = '<h2>' + (PBQ_COUNT + index + 1) + '. ' + escapeHtml(q.text) + '</h2>' + hint + opts.map((opt, i) => '<button type="button" class="quiz-option" data-q="' + index + '" data-a="' + i + '" data-multi="' + (q.multiSelect ? '1' : '0') + '">' + escapeHtml(opt) + '</button>').join('');
         container.appendChild(block);
       });
@@ -461,6 +570,7 @@ All other pins straight.</div>
             btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
           }
+          updateProgressBar();
         });
       });
     }
@@ -471,6 +581,68 @@ All other pins straight.</div>
     const EXAM_MINUTES = 90;
     let timerSeconds = EXAM_MINUTES * 60;
     let timerInterval = null;
+
+    function updateProgressBar() {
+      const answered = Object.keys(selectedAnswers).length;
+      const pbqAnswered = (document.getElementById('pbq1-cause').value ? 1 : 0);
+      const total = totalQuestions;
+      const pct = Math.min(100, Math.round(((answered + pbqAnswered) / total) * 100));
+      document.getElementById('progress-bar').style.width = pct + '%';
+    }
+
+    function launchConfetti() {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'confetti-canvas';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const pieces = [];
+      const colors = ['#7c5cff','#5ce1ff','#22c55e','#f59e0b','#ef4444','#ec4899'];
+      for (let i = 0; i < 150; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          w: Math.random() * 8 + 4,
+          h: Math.random() * 6 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vy: Math.random() * 4 + 2,
+          vx: (Math.random() - 0.5) * 3,
+          rot: Math.random() * 360,
+          rv: (Math.random() - 0.5) * 8
+        });
+      }
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+          p.vy += 0.05;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.max(0, 1 - frames / 120);
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 140) requestAnimationFrame(draw);
+        else canvas.remove();
+      }
+      draw();
+    }
+
+    function animateScore(el, target, duration) {
+      const start = performance.now();
+      function step(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(100 + ease * (target - 100)) + ' / 900';
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
 
     function formatTime(sec) {
       const m = Math.floor(sec / 60);
@@ -563,10 +735,10 @@ All other pins straight.</div>
       if (totalMc > 0) breakdown += ' &nbsp;•&nbsp; Multiple choice: ' + mcScore + '/' + totalMc;
       breakdown += ' &nbsp;•&nbsp; Weighted total: ' + totalWeightedCorrect.toFixed(1) + '/' + totalWeightedMax.toFixed(1);
 
-      let resultsHtml = '<div class="results-card"><div class="score-big">' + clampedScore + ' / ' + SCALE_MAX + '</div><div class="score-label ' + (passed ? 'score-pass' : 'score-fail') + '">' + (passed ? 'Pass' : 'Fail') + ' (passing: ' + PASSING_SCORE + ')</div><div class="score-breakdown">' + breakdown + '</div>';
-      resultsHtml += '<div class="score-label" style="text-align:left; margin-bottom:0.5rem">PBQs: ' + pbqFeedback.map(f => 'PBQ ' + f.n + ' ' + (f.ok ? '✓' : '✗')).join(' &nbsp; ') + '</div>';
-      resultsHtml += mcResults.map(r => '<div class="result-item"><span class="result-icon ' + (r.correct ? 'correct' : 'wrong') + '">' + (r.correct ? '✓' : '✕') + '</span><div class="result-text"><strong>' + escapeHtml(r.text) + '</strong><span>Your answer: ' + escapeHtml(r.userAnswer) + (r.correct ? '' : ' — Correct: ' + escapeHtml(r.correctAnswer)) + '</span></div></div>').join('');
-      resultsHtml += '<div class="finish-row" style="margin-top:1.5rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take test again</button></div></div>';
+      let resultsHtml = '<div class="results-card"><div class="score-big ' + (passed ? 'pass-color' : 'fail-color') + '" id="score-counter">100 / 900</div><div class="score-label ' + (passed ? 'score-pass' : 'score-fail') + '">' + (passed ? '&#10003; Pass' : '&#10007; Fail') + ' (passing: ' + PASSING_SCORE + ')</div><div class="score-breakdown">' + breakdown + '</div>';
+      resultsHtml += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1rem">' + pbqFeedback.map(f => '<span style="padding:0.3rem 0.7rem;border-radius:6px;font-size:0.8rem;font-weight:600;background:' + (f.ok ? 'rgba(34,197,94,0.15);color:#22c55e' : 'rgba(239,68,68,0.15);color:#ef4444') + '">PBQ ' + f.n + ' ' + (f.ok ? '&#10003;' : '&#10007;') + '</span>').join('') + '</div>';
+      resultsHtml += mcResults.map(r => '<div class="result-item"><span class="result-icon ' + (r.correct ? 'correct' : 'wrong') + '">' + (r.correct ? '&#10003;' : '&#10007;') + '</span><div class="result-text"><strong>' + escapeHtml(r.text) + '</strong><span>Your answer: ' + escapeHtml(r.userAnswer) + (r.correct ? '' : ' &mdash; Correct: ' + escapeHtml(r.correctAnswer)) + '</span></div></div>').join('');
+      resultsHtml += '<div class="finish-row" style="margin-top:1.5rem"><button type="button" class="btn btn-ghost" id="retake-btn">&#8634; Take test again</button></div></div>';
 
       document.getElementById('results-container').innerHTML = resultsHtml;
       document.getElementById('results-container').style.display = 'block';
@@ -576,7 +748,11 @@ All other pins straight.</div>
       document.getElementById('mc-section-label').style.display = 'none';
       document.getElementById('exam-timer').style.display = 'none';
       document.getElementById('quiz-progress').textContent = 'Results';
+      document.getElementById('progress-bar').style.width = '100%';
       stopTimer();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      animateScore(document.getElementById('score-counter'), clampedScore, 1200);
+      if (passed) setTimeout(launchConfetti, 600);
 
       document.getElementById('retake-btn').addEventListener('click', () => {
         document.getElementById('results-container').style.display = 'none';
@@ -587,6 +763,7 @@ All other pins straight.</div>
         if (totalMc > 0) document.getElementById('mc-section-label').style.display = 'block';
         document.getElementById('quiz-progress').textContent = totalMc > 0 ? ('Questions 1–' + totalQuestions + ' (5 PBQs + ' + totalMc + ' multiple choice) • 90 min') : (PBQ_COUNT + ' PBQs');
         document.getElementById('exam-timer').style.display = '';
+        document.getElementById('progress-bar').style.width = '0%';
         resetTimer();
         selectedAnswers = {};
         matchAssignments = {};
