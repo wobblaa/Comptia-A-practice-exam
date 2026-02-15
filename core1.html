@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompTIA A+ Core 1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #0f0f12; --surface: #18181d; --surface-hover: #222228; --border: #2a2a32; --text: #e8e8ed; --text-muted: #8888a0; --accent: #7c5cff; --accent-hover: #9278ff; --correct: #22c55e; --wrong: #ef4444; --radius: 12px; --radius-sm: 8px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    .app { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .quiz-progress { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .section-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 1.5rem 0 0.75rem; }
+    .pbq-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .pbq-card h2 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .scenario { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 1rem; white-space: pre-wrap; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.35rem; }
+    .field select { width: 100%; padding: 0.65rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; cursor: pointer; }
+    .field select:focus { outline: none; border-color: var(--accent); }
+    .mc-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .mc-option { display: block; width: 100%; padding: 0.85rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .mc-option:hover { border-color: var(--accent); background: var(--surface-hover); }
+    .mc-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
+    .multiselect-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .checkbox-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; }
+    .checkbox-option:hover { border-color: var(--accent); }
+    .checkbox-option input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+    .match-area { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+    .match-column h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .match-slots { display: flex; flex-direction: column; gap: 0.5rem; }
+    .match-row { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); }
+    .match-row.drag-over { border-color: var(--accent); background: rgba(124, 92, 255, 0.1); }
+    .match-row .port { font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 2.5rem; }
+    .match-row .drop-zone { flex: 1; min-height: 32px; }
+    .draggable-chip { padding: 0.4rem 0.75rem; background: var(--accent); color: white; border-radius: var(--radius-sm); font-size: 0.85rem; cursor: grab; user-select: none; }
+    .draggable-chip:active { cursor: grabbing; }
+    .draggable-chip.dragging { opacity: 0.6; }
+    .chips-pool { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .quiz-question h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.4; }
+    .quiz-option { display: block; width: 100%; padding: 1rem 1.25rem; margin-bottom: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .quiz-option:hover { border-color: var(--accent); background: var(--surface-hover); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
+    .finish-row { margin-top: 1.5rem; display: flex; justify-content: center; }
+    .btn { padding: 0.9rem 2rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 500; cursor: pointer; background: var(--accent); color: white; }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+    .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; text-align: center; margin-bottom: 1.5rem; }
+    .score-big { font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); margin-bottom: 0.25rem; }
+    .score-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+    .score-breakdown { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .score-pass { color: var(--correct); font-weight: 600; }
+    .score-fail { color: var(--wrong); font-weight: 600; }
+    .exam-timer { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; }
+    .exam-timer.low { color: var(--wrong); }
+    .exam-timer .timer-label { color: var(--text-muted); font-family: inherit; font-size: 0.8rem; }
+    .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); text-align: left; }
+    .result-item:last-child { border-bottom: none; }
+    .result-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+    .result-icon.correct { background: rgba(34, 197, 94, 0.2); color: var(--correct); }
+    .result-icon.wrong { background: rgba(239, 68, 68, 0.2); color: var(--wrong); }
+    .result-text strong { display: block; margin-bottom: 0.25rem; }
+    .result-text span { color: var(--text-muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <a href="index.html" class="back-link">← Back to home</a>
+    <h1>CompTIA A+ Core 1</h1>
+    <div class="exam-timer" id="exam-timer">
+      <span class="timer-label">Time remaining</span>
+      <span id="timer-display">90:00</span>
+    </div>
+    <p class="quiz-progress" id="quiz-progress"></p>
+
+    <div id="pbq-section">
+      <div class="section-label">Performance-based questions (PBQs)</div>
+      <!-- PBQ 1: Intermittent connectivity -->
+      <div class="pbq-card" data-pbq="1">
+        <h2>PBQ 1</h2>
+        <div class="scenario">A user reports intermittent network connectivity. When the issue occurs, ipconfig shows:
+
+IPv4 Address: 192.168.1.25
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+
+The user cannot access external websites but can access internal shared drives.</div>
+        <div class="field">
+          <label>What is the MOST likely cause?</label>
+          <select id="pbq1-cause">
+            <option value="">— Select —</option>
+            <option value="dns">DNS server failure</option>
+            <option value="firewall">Firewall blocking external traffic</option>
+            <option value="isp">ISP or WAN link down</option>
+            <option value="dhcp">DHCP lease expired</option>
+            <option value="gateway">Default gateway misconfigured</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>What tool should you use NEXT to confirm the issue?</label>
+          <select id="pbq1-tool">
+            <option value="">— Select —</option>
+            <option value="nslookup">nslookup</option>
+            <option value="tracert">tracert</option>
+            <option value="ping-ext">ping an external IP (e.g. 8.8.8.8)</option>
+            <option value="ipconfig-renew">ipconfig /renew</option>
+            <option value="pathping">pathping</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>What is the MOST likely failing component or service?</label>
+          <select id="pbq1-component">
+            <option value="">— Select —</option>
+            <option value="dns-server">DNS server</option>
+            <option value="router">Router / firewall</option>
+            <option value="isp-link">ISP connection / WAN link</option>
+            <option value="dhcp-server">DHCP server</option>
+            <option value="nic">Network interface card (NIC)</option>
+          </select>
+        </div>
+      </div>
+      <!-- PBQ 2: Wireless config -->
+      <div class="pbq-card" data-pbq="2">
+        <h2>PBQ 2</h2>
+        <div class="scenario">You are configuring a wireless network for a small office. Requirements:
+• Strongest available encryption
+• Backward compatibility with older devices
+• Prevent brute-force PIN attacks
+• Separate guest network from internal LAN</div>
+        <p class="multiselect-hint">Select ALL configuration changes you would make:</p>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-A" value="A"><label for="pbq2-A">Enable WPA2/WPA3 transitional (mixed) mode</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-B" value="B"><label for="pbq2-B">Enable AES encryption</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-C" value="C"><label for="pbq2-C">Disable WPS</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-D" value="D"><label for="pbq2-D">Enable guest network / VLAN isolation</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-E" value="E"><label for="pbq2-E">Enable TKIP encryption</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-F" value="F"><label for="pbq2-F">Disable SSID broadcast</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-G" value="G"><label for="pbq2-G">Enable WEP for backward compatibility</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-H" value="H"><label for="pbq2-H">Enable MAC address filtering</label></div>
+      </div>
+      <!-- PBQ 3: Symptom-to-component match -->
+      <div class="pbq-card" data-pbq="3">
+        <h2>PBQ 3</h2>
+        <p style="margin-bottom: 0.75rem;">Match each symptom with the MOST likely failing component. Drag each component to the symptom it explains.</p>
+        <div class="match-area">
+          <div class="match-column">
+            <h3>Symptom</h3>
+            <div class="match-slots" id="match-slots">
+              <div class="match-row" data-port="A"><span class="port" style="min-width:auto; font-family:inherit; font-size:0.85rem;">A. Ghost image repeating</span><div class="drop-zone" data-port="A"></div></div>
+              <div class="match-row" data-port="B"><span class="port" style="min-width:auto; font-family:inherit; font-size:0.85rem;">B. Entire page faded</span><div class="drop-zone" data-port="B"></div></div>
+              <div class="match-row" data-port="C"><span class="port" style="min-width:auto; font-family:inherit; font-size:0.85rem;">C. Paper not feeding</span><div class="drop-zone" data-port="C"></div></div>
+              <div class="match-row" data-port="D"><span class="port" style="min-width:auto; font-family:inherit; font-size:0.85rem;">D. Clicking, not in BIOS</span><div class="drop-zone" data-port="D"></div></div>
+              <div class="match-row" data-port="E"><span class="port" style="min-width:auto; font-family:inherit; font-size:0.85rem;">E. Screen flickers w/ lid</span><div class="drop-zone" data-port="E"></div></div>
+            </div>
+          </div>
+          <div class="match-column">
+            <h3>Component (drag to symptom)</h3>
+            <div class="chips-pool" id="chips-pool">
+              <span class="draggable-chip" draggable="true" data-protocol="Imaging drum">Imaging drum</span>
+              <span class="draggable-chip" draggable="true" data-protocol="Toner cartridge">Toner cartridge</span>
+              <span class="draggable-chip" draggable="true" data-protocol="Pickup roller">Pickup roller</span>
+              <span class="draggable-chip" draggable="true" data-protocol="Hard drive">Hard drive</span>
+              <span class="draggable-chip" draggable="true" data-protocol="Display cable">Display cable</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- PBQ 4: Virtualization upgrade -->
+      <div class="pbq-card" data-pbq="4">
+        <h2>PBQ 4</h2>
+        <div class="scenario">You are upgrading a workstation to run multiple virtual machines.
+
+Minimum requirements include:
+• Hardware virtualization support
+• Memory considerations
+• Storage considerations</div>
+        <p class="multiselect-hint">Select the THREE hardware factors that must be verified or upgraded:</p>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-A" value="A"><label for="pbq4-A">CPU with hardware virtualization (VT-x / AMD-V)</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-B" value="B"><label for="pbq4-B">Sufficient RAM (e.g. 16 GB+)</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-C" value="C"><label for="pbq4-C">Fast storage (SSD recommended)</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-D" value="D"><label for="pbq4-D">Dedicated GPU</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-E" value="E"><label for="pbq4-E">Multiple network interface cards</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-F" value="F"><label for="pbq4-F">TPM 2.0 module</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq4-G" value="G"><label for="pbq4-G">64-bit operating system</label></div>
+      </div>
+      <!-- PBQ 5: Cable tester -->
+      <div class="pbq-card" data-pbq="5">
+        <h2>PBQ 5</h2>
+        <div class="scenario">A technician connects a network cable tester to an Ethernet cable. The tester reports:
+
+1→3
+2→6
+3→1
+6→2
+
+All other pins straight.</div>
+        <div class="field">
+          <label>What type of cable is this?</label>
+          <select id="pbq5-type">
+            <option value="">— Select —</option>
+            <option value="straight">Straight-through</option>
+            <option value="crossover">Crossover</option>
+            <option value="rollover">Rollover / console</option>
+            <option value="patch">Patch cable</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>In what scenario would this cable be used?</label>
+          <select id="pbq5-scenario">
+            <option value="">— Select —</option>
+            <option value="pc-pc">PC to PC (direct connection)</option>
+            <option value="pc-switch">PC to switch</option>
+            <option value="switch-switch">Switch to switch (or switch to hub)</option>
+            <option value="router-console">Router console management</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Would this cable work between a PC and a modern switch? Why?</label>
+          <select id="pbq5-work">
+            <option value="">— Select —</option>
+            <option value="yes-auto">Yes — most modern switches support Auto-MDI/MDI-X</option>
+            <option value="yes-always">Yes — crossover cables always work with switches</option>
+            <option value="no-wrong">No — PCs require straight-through cables for switches</option>
+            <option value="no-damage">No — it could damage the switch port</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label" id="mc-section-label" style="display: none;">Multiple choice</div>
+    <div id="quiz-questions"></div>
+    <div class="finish-row">
+      <button type="button" class="btn" id="finish-btn">Finish &amp; grade</button>
+    </div>
+    <div id="results-container" style="display: none;"></div>
+  </div>
+
+  <script>
+    const questions = [
+      { text: "A user reports that after a Windows update, network printing no longer works. Other devices can print. What should be checked FIRST?", options: ["A. Replace printer", "B. Verify printer driver and spooler service", "C. Replace NIC", "D. Replace router"], correctIndex: 1 },
+      { text: "Which protocol is used to send email from a client to a mail server?", options: ["A. POP3", "B. IMAP", "C. SMTP", "D. SNMP"], correctIndex: 2 },
+      { text: "A technician needs to connect to a managed switch console port. Which connector and standard are MOST commonly used?", options: ["A. RJ45 Ethernet", "B. DB-9 or RJ45 serial (RS-232)", "C. USB-C", "D. HDMI"], correctIndex: 1 },
+      { text: "A PC displays SMART errors during boot. What does this MOST likely indicate?", options: ["A. RAM failure", "B. Drive failure warning", "C. CPU overheating", "D. BIOS corruption"], correctIndex: 1 },
+      { text: "Which cloud model provides virtual machines to customers?", options: ["A. SaaS", "B. PaaS", "C. IaaS", "D. DaaS"], correctIndex: 2 },
+      { text: "A technician installs new RAM and the system fails to boot. Which is the MOST likely cause?", options: ["A. Incorrect RAM type or speed", "B. Hard drive failure", "C. Faulty monitor", "D. Loose Ethernet cable"], correctIndex: 0 },
+      { text: "Which tool shows active network connections and listening ports?", options: ["A. ipconfig", "B. netstat", "C. ping", "D. nslookup"], correctIndex: 1 },
+      { text: "A network cable tester shows a break on pin 4. What is this condition called?", options: ["A. Short", "B. Open", "C. Split pair", "D. Crossover"], correctIndex: 1 },
+      { text: "Which feature allows a smartphone to make contactless payments?", options: ["A. Bluetooth", "B. NFC", "C. GPS", "D. IR"], correctIndex: 1 },
+      { text: "Which of the following provides power to devices over Ethernet cabling?", options: ["A. VLAN", "B. NAT", "C. PoE", "D. DNS"], correctIndex: 2 },
+      { text: "Which type of hypervisor runs directly on hardware?", options: ["A. Type 1", "B. Type 2", "C. RAID 5", "D. VLAN"], correctIndex: 0 },
+      { text: "A laptop battery is swollen. What should be done?", options: ["A. Continue using it", "B. Replace it immediately", "C. Freeze it", "D. Puncture it"], correctIndex: 1 },
+      { text: "A user cannot access websites but can ping external IP addresses. What is the MOST likely issue?", options: ["A. DNS failure", "B. DHCP failure", "C. Bad NIC", "D. Wrong subnet mask"], correctIndex: 0 },
+      { text: "Which RAID level mirrors data between two drives?", options: ["A. RAID 0", "B. RAID 1", "C. RAID 5", "D. RAID 10"], correctIndex: 1 },
+      { text: "A technician needs to prevent static discharge while replacing components. What should be used?", options: ["A. ESD wrist strap", "B. Magnetized screwdriver", "C. Rubber gloves only", "D. Surge protector"], correctIndex: 0 },
+      { text: "A printer prints completely blank pages. The toner is new. What should be checked NEXT?", options: ["A. Network cable", "B. Imaging drum or transfer roller", "C. BIOS settings", "D. Monitor cable"], correctIndex: 1 },
+      { text: "Which command renews a DHCP lease in Windows?", options: ["A. ipconfig /renew", "B. netstat -a", "C. tracert", "D. format"], correctIndex: 0 },
+      { text: "Which of the following is used to assign IP addresses automatically?", options: ["A. DNS", "B. DHCP", "C. LDAP", "D. FTP"], correctIndex: 1 },
+      { text: "A laptop display is very dim but becomes faintly visible when shining a flashlight at the screen. An external monitor displays normally. What is MOST likely failing?", options: ["A. GPU", "B. Backlight or inverter circuit", "C. Display cable", "D. LCD panel controller"], correctIndex: 1 },
+      { text: "Which cable category supports 1 Gbps up to 100 meters?", options: ["A. Cat 3", "B. Cat 5e", "C. Cat 6a", "D. Coaxial"], correctIndex: 1 },
+      { text: "Which IP range is reserved for loopback testing?", options: ["A. 169.254.0.0/16", "B. 127.0.0.0/8", "C. 10.0.0.0/8", "D. 192.168.0.0/16"], correctIndex: 1 },
+      { text: "Which Windows tool can be used to verify DNS resolution?", options: ["A. ipconfig", "B. nslookup", "C. netstat", "D. format"], correctIndex: 1 },
+      { text: "A desktop randomly reboots during gaming or other high-load activity. Which TWO components are MOST likely responsible? (Choose TWO)", options: ["A. PSU", "B. Overheating CPU", "C. Failing SSD", "D. Corrupt OS"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "Which port does HTTPS use?", options: ["A. 80", "B. 443", "C. 110", "D. 25"], correctIndex: 1 },
+      { text: "Which type of cable is MOST resistant to electromagnetic interference?", options: ["A. UTP", "B. STP", "C. Coaxial", "D. Fiber"], correctIndex: 3 },
+      { text: "Which device separates broadcast domains?", options: ["A. Switch", "B. Hub", "C. Router", "D. Repeater"], correctIndex: 2 },
+      { text: "A company needs to isolate guest Wi-Fi traffic from internal servers while using the same physical switches. Which configuration achieves this?", options: ["A. NAT", "B. VLAN segmentation", "C. RAID 5", "D. Port mirroring"], correctIndex: 1 },
+      { text: "Which USB connector is common on newer laptops and phones?", options: ["A. USB-A", "B. USB-B", "C. USB-C", "D. Mini-USB"], correctIndex: 2 },
+      { text: "A smartphone does not charge with a known-good cable and adapter. Which TWO should be checked FIRST? (Choose TWO)", options: ["A. Charging port debris or damage", "B. Battery health status", "C. OS version", "D. Power management settings"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "Which protocol resolves domain names to IP addresses?", options: ["A. DHCP", "B. DNS", "C. FTP", "D. SMTP"], correctIndex: 1 },
+      { text: "Which storage type is fastest for CPU cache?", options: ["A. DRAM", "B. SRAM", "C. SSD", "D. HDD"], correctIndex: 1 },
+      { text: "Which wireless security protocol is MOST secure currently available?", options: ["A. WEP", "B. WPA", "C. WPA2", "D. WPA3"], correctIndex: 3 },
+      { text: "A hard drive makes repetitive clicking sounds and intermittently appears in BIOS. What is the MOST likely cause?", options: ["A. Failing read/write heads", "B. Corrupt file system", "C. Incorrect boot order", "D. Loose SATA power connector"], correctIndex: 0 },
+      { text: "Which connector type is MOST commonly used for modern external SATA connections?", options: ["A. eSATA", "B. USB-C with SATA bridge", "C. Mini-SAS", "D. RJ45"], correctIndex: 0 },
+      { text: "A laptop keyboard types incorrect characters intermittently. Which TWO are MOST likely causes? (Choose TWO)", options: ["A. Incorrect keyboard layout configured", "B. Damaged ribbon cable", "C. Failing RAM", "D. DNS misconfiguration"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "Which port does LDAP use by default?", options: ["A. 389", "B. 80", "C. 443", "D. 3389"], correctIndex: 0 },
+      { text: "Which feature prevents brute-force PIN attacks on Wi-Fi routers?", options: ["A. Disable SSID broadcast", "B. Disable WPS", "C. Enable NAT", "D. Enable DHCP"], correctIndex: 1 },
+      { text: "Which type of attack intercepts traffic between two parties?", options: ["A. DoS", "B. Phishing", "C. Man-in-the-middle", "D. Brute force"], correctIndex: 2 },
+      { text: "Task Manager shows sustained 100% disk usage with high latency on a mechanical drive. What is the MOST likely hardware cause?", options: ["A. Failing HDD sectors", "B. Insufficient RAM", "C. Corrupt GPU driver", "D. Disabled page file"], correctIndex: 0 },
+      { text: "Which protocol retrieves email from a server and allows messages to remain on the server?", options: ["A. POP3", "B. SMTP", "C. IMAP", "D. SNMP"], correctIndex: 2 },
+      { text: "A workstation can ping its default gateway and external IP addresses but cannot browse websites by name. Which service is MOST likely misconfigured?", options: ["A. DHCP", "B. DNS", "C. NAT", "D. VLAN"], correctIndex: 1 },
+      { text: "Which connector is used for standard Ethernet networking?", options: ["A. RJ11", "B. RJ45", "C. LC", "D. DB9"], correctIndex: 1 },
+      { text: "Which RAID level combines mirroring and striping?", options: ["A. RAID 0", "B. RAID 1", "C. RAID 5", "D. RAID 10"], correctIndex: 3 },
+      { text: "Which Windows command shows full IP configuration details?", options: ["A. ipconfig", "B. ipconfig /all", "C. netstat", "D. tracert"], correctIndex: 1 },
+      { text: "A user experiences intermittent Wi-Fi disconnects. Signal strength fluctuates between strong and weak. Which TWO factors are MOST likely contributing? (Choose TWO)", options: ["A. RF interference", "B. Channel congestion", "C. Incorrect RAID level", "D. Failing SSD"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "Which device operates at Layer 2?", options: ["A. Router", "B. Switch", "C. Firewall", "D. Repeater"], correctIndex: 1 },
+      { text: "A laptop display shows persistent vertical colored lines even in BIOS. What is the MOST likely failing component?", options: ["A. GPU", "B. LCD panel", "C. Display cable", "D. Video driver"], correctIndex: 1 },
+      { text: "Which IP range is APIPA?", options: ["A. 10.0.0.0/8", "B. 169.254.0.0/16", "C. 172.16.0.0/12", "D. 127.0.0.0/8"], correctIndex: 1 },
+      { text: "Which tool traces the path packets take to a destination?", options: ["A. ping", "B. tracert", "C. netstat", "D. format"], correctIndex: 1 },
+      { text: "Which frequency does 802.11ac use?", options: ["A. 2.4 GHz only", "B. 5 GHz only", "C. 3 GHz", "D. 60 GHz"], correctIndex: 1 },
+      { text: "Which component converts AC power to DC for a computer?", options: ["A. PSU", "B. Inverter", "C. Battery", "D. Surge protector"], correctIndex: 0 },
+      { text: "A system displays \"No boot device found\" after installing a new SSD. The drive appears in BIOS storage listing. What should be checked FIRST?", options: ["A. Boot order priority", "B. RAID level", "C. RAM seating", "D. GPU drivers"], correctIndex: 0 },
+      { text: "Which protocol uses port 22?", options: ["A. FTP", "B. SSH", "C. SMTP", "D. DNS"], correctIndex: 1 },
+      { text: "Which cable type is required to directly connect two PCs without a switch (older NICs)?", options: ["A. Straight-through", "B. Crossover", "C. Fiber", "D. Coaxial"], correctIndex: 1 },
+      { text: "A thin client relies on a central server for processing. Which model is this?", options: ["A. IaaS", "B. PaaS", "C. VDI", "D. SaaS"], correctIndex: 2 },
+      { text: "Which protocol uses port 53?", options: ["A. DNS", "B. SMTP", "C. FTP", "D. RDP"], correctIndex: 0 },
+      { text: "Which RAID level has NO redundancy?", options: ["A. RAID 0", "B. RAID 1", "C. RAID 5", "D. RAID 10"], correctIndex: 0 },
+      { text: "Which port does RDP use?", options: ["A. 3389", "B. 22", "C. 80", "D. 143"], correctIndex: 0 },
+      { text: "Which TWO tools are required to properly terminate an Ethernet cable with an RJ45 connector? (Choose TWO)", options: ["A. Cable crimper", "B. Wire stripper", "C. Multimeter", "D. Loopback plug"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "Which service automatically assigns IP addresses?", options: ["A. DHCP", "B. DNS", "C. SMTP", "D. SNMP"], correctIndex: 0 },
+      { text: "Which memory is volatile?", options: ["A. SSD", "B. HDD", "C. RAM", "D. Optical"], correctIndex: 2 },
+      { text: "Which device filters traffic based on security rules?", options: ["A. Switch", "B. Hub", "C. Firewall", "D. Repeater"], correctIndex: 2 },
+      { text: "Which port does FTP use by default?", options: ["A. 20/21", "B. 22", "C. 443", "D. 3389"], correctIndex: 0 },
+      { text: "A laptop fan runs constantly at maximum speed, even at idle. CPU temperatures are normal. What is the MOST likely cause?", options: ["A. Dust buildup in cooling vents", "B. BIOS fan curve configuration", "C. Failing battery", "D. Corrupt OS power plan"], correctIndex: 1 },
+      { text: "Which cloud model provides only the runtime and development platform?", options: ["A. IaaS", "B. PaaS", "C. SaaS", "D. DaaS"], correctIndex: 1 },
+      { text: "Which address class includes 192.168.x.x?", options: ["A. Class A", "B. Class B", "C. Class C", "D. Class D"], correctIndex: 2 },
+      { text: "Which device regenerates digital signals to extend cable distance?", options: ["A. Router", "B. Switch", "C. Repeater", "D. Firewall"], correctIndex: 2 },
+      { text: "Which protocol retrieves email and typically downloads it to the local device?", options: ["A. IMAP", "B. POP3", "C. SMTP", "D. SNMP"], correctIndex: 1 },
+      { text: "Which security protocol replaced WEP?", options: ["A. WPA", "B. WPA3", "C. AES", "D. TKIP"], correctIndex: 0 },
+      { text: "A technician needs to separate logical networks on the same physical switch. What should be configured?", options: ["A. NAT", "B. VLAN", "C. RAID", "D. DNS"], correctIndex: 1 },
+      { text: "Which RAID level provides striping with distributed parity and requires at least three disks?", options: ["A. RAID 0", "B. RAID 1", "C. RAID 5", "D. RAID 10"], correctIndex: 2 },
+      { text: "A workstation intermittently loses connectivity. The link light on the NIC turns off when the issue occurs. Other devices on the switch remain connected. What should be checked FIRST?", options: ["A. Replace NIC", "B. Check patch cable and wall jack", "C. Reboot router", "D. Flush DNS"], correctIndex: 1 },
+      { text: "Which port does IMAPS use by default?", options: ["A. 110", "B. 143", "C. 993", "D. 995"], correctIndex: 2 },
+      { text: "A user can ping 8.8.8.8 but cannot browse to websites by name. What should be verified?", options: ["A. DHCP lease time", "B. DNS server settings", "C. Default gateway", "D. Subnet mask"], correctIndex: 1 },
+      { text: "Which Wi-Fi standard operates ONLY on 5 GHz and introduced MU-MIMO?", options: ["A. 802.11g", "B. 802.11n", "C. 802.11ac", "D. 802.11b"], correctIndex: 2 },
+      { text: "A desktop powers on, fans spin, but no display and no POST beeps are heard. What is the MOST appropriate first step?", options: ["A. Replace motherboard", "B. Reseat RAM modules", "C. Replace GPU", "D. Update BIOS"], correctIndex: 1 },
+      { text: "Which tool can be used to test whether a remote server's specific port is open?", options: ["A. ping", "B. tracert", "C. telnet", "D. ipconfig"], correctIndex: 2 },
+      { text: "Which of the following are private IPv4 ranges? (Choose TWO)", options: ["A. 172.16.0.0/12", "B. 169.254.0.0/16", "C. 192.168.0.0/16", "D. 11.0.0.0/8"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "After relocating a desktop, the monitor displays \"No signal.\" The system powers on and fans spin. What should be verified FIRST?", options: ["A. Monitor input source selection", "B. GPU firmware version", "C. RAM compatibility", "D. PSU wattage"], correctIndex: 0 },
+      { text: "Which connector is commonly used for fiber optic connections?", options: ["A. RJ45", "B. LC", "C. DB9", "D. Molex"], correctIndex: 1 },
+      { text: "A printer produces smudged toner that rubs off easily. What component is MOST likely failing?", options: ["A. Fuser assembly", "B. Pickup roller", "C. Imaging drum", "D. Transfer belt"], correctIndex: 0 },
+      { text: "Which layer of the OSI model does a router primarily operate at?", options: ["A. Layer 1", "B. Layer 2", "C. Layer 3", "D. Layer 4"], correctIndex: 2 },
+      { text: "Which two frequency bands can 802.11n use? (Choose TWO)", options: ["A. 2.4 GHz", "B. 3 GHz", "C. 5 GHz", "D. 60 GHz"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "Which storage technology has no moving parts?", options: ["A. HDD", "B. SSD", "C. Optical drive", "D. Tape"], correctIndex: 1 },
+      { text: "A laptop overheats and shuts down under sustained load. Which TWO corrective actions are MOST appropriate? (Choose TWO)", options: ["A. Clean heatsinks and fans", "B. Reapply thermal paste", "C. Replace SSD", "D. Disable Wi-Fi"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] }
+    ];
+    const PBQ_CORRECT = {
+      pbq1: { cause: 'dns', tool: 'nslookup', component: 'dns-server' },
+      pbq2: ['A', 'B', 'C', 'D'],
+      pbq3: { A: 'Imaging drum', B: 'Toner cartridge', C: 'Pickup roller', D: 'Hard drive', E: 'Display cable' },
+      pbq4: ['A', 'B', 'C'],
+      pbq5: { type: 'crossover', scenario: 'pc-pc', work: 'yes-auto' }
+    };
+    const PBQ_COUNT = 5;
+    const PBQ_WEIGHT = 2;
+    const PASSING_SCORE = 675;
+    const SCALE_MIN = 100;
+    const SCALE_MAX = 900;
+
+    function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    let selectedAnswers = {};
+    let matchAssignments = {};
+    let draggedChip = null;
+
+    const pbq2Ids = ['pbq2-A','pbq2-B','pbq2-C','pbq2-D','pbq2-E','pbq2-F','pbq2-G','pbq2-H'];
+    const pbq4Ids = ['pbq4-A','pbq4-B','pbq4-C','pbq4-D','pbq4-E','pbq4-F','pbq4-G'];
+    pbq4Ids.forEach(id => {
+      document.getElementById(id).addEventListener('change', function() {
+        if (pbq4Ids.filter(i => document.getElementById(i).checked).length > 3) this.checked = false;
+      });
+    });
+
+    const chipsPool = document.getElementById('chips-pool');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    function makeChipDraggable(chip) {
+      chip.draggable = true;
+      chip.dataset.protocol = chip.textContent.trim();
+      chip.classList.add('draggable-chip');
+      chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', chip.dataset.protocol);
+        e.dataTransfer.effectAllowed = 'move';
+        chip.classList.add('dragging');
+        draggedChip = chip;
+      });
+      chip.addEventListener('dragend', () => { chip.classList.remove('dragging'); draggedChip = null; });
+    }
+    document.querySelectorAll('#chips-pool .draggable-chip').forEach(makeChipDraggable);
+    dropZones.forEach(zone => {
+      zone.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; zone.closest('.match-row').classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.closest('.match-row').classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.closest('.match-row').classList.remove('drag-over');
+        const port = zone.dataset.port;
+        if (zone.firstChild) {
+          const old = zone.firstChild;
+          const oldProtocol = old.dataset.protocol;
+          delete matchAssignments[port];
+          old.remove();
+          const back = document.createElement('span');
+          back.textContent = oldProtocol;
+          back.dataset.protocol = oldProtocol;
+          makeChipDraggable(back);
+          chipsPool.appendChild(back);
+        }
+        if (draggedChip) {
+          draggedChip.remove();
+          zone.appendChild(draggedChip);
+          matchAssignments[port] = draggedChip.dataset.protocol;
+          draggedChip = null;
+        }
+      });
+    });
+    chipsPool.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    chipsPool.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedChip && draggedChip.parentElement && draggedChip.parentElement.classList.contains('drop-zone')) {
+        const port = draggedChip.parentElement.dataset.port;
+        delete matchAssignments[port];
+        draggedChip.parentElement.removeChild(draggedChip);
+        chipsPool.appendChild(draggedChip);
+      }
+    });
+
+    function gradePbqs() {
+      let score = 0;
+      // PBQ 1: 3 dropdowns
+      if (document.getElementById('pbq1-cause').value === PBQ_CORRECT.pbq1.cause && document.getElementById('pbq1-tool').value === PBQ_CORRECT.pbq1.tool && document.getElementById('pbq1-component').value === PBQ_CORRECT.pbq1.component) score++;
+      // PBQ 2: checkboxes (select all correct)
+      const q2checked = pbq2Ids.filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value).sort().join(',');
+      if (q2checked === [...PBQ_CORRECT.pbq2].sort().join(',')) score++;
+      // PBQ 3: drag-and-drop match (5 symptoms)
+      let q3ok = true;
+      for (const key of Object.keys(PBQ_CORRECT.pbq3)) { if (matchAssignments[key] !== PBQ_CORRECT.pbq3[key]) q3ok = false; }
+      if (q3ok && Object.keys(matchAssignments).length === 5) score++;
+      // PBQ 4: checkboxes (select 3)
+      const q4checked = pbq4Ids.filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value).sort().join(',');
+      if (q4checked === [...PBQ_CORRECT.pbq4].sort().join(',')) score++;
+      // PBQ 5: 3 dropdowns
+      if (document.getElementById('pbq5-type').value === PBQ_CORRECT.pbq5.type && document.getElementById('pbq5-scenario').value === PBQ_CORRECT.pbq5.scenario && document.getElementById('pbq5-work').value === PBQ_CORRECT.pbq5.work) score++;
+      return score;
+    }
+
+    function renderMc() {
+      const container = document.getElementById('quiz-questions');
+      const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
+      if (validQuestions.length === 0) {
+        container.innerHTML = '';
+        document.getElementById('mc-section-label').style.display = 'none';
+        return;
+      }
+      document.getElementById('mc-section-label').style.display = 'block';
+      container.innerHTML = '';
+      validQuestions.forEach((q, index) => {
+        const opts = q.options.filter(o => o && o.trim());
+        const block = document.createElement('div');
+        block.className = 'quiz-question';
+        const hint = q.multiSelect ? '<p style="color:#6366f1;font-size:0.85rem;margin:0.25rem 0 0.5rem;">(Select all that apply)</p>' : '';
+        block.innerHTML = '<h2>' + (PBQ_COUNT + index + 1) + '. ' + escapeHtml(q.text) + '</h2>' + hint + opts.map((opt, i) => '<button type="button" class="quiz-option" data-q="' + index + '" data-a="' + i + '" data-multi="' + (q.multiSelect ? '1' : '0') + '">' + escapeHtml(opt) + '</button>').join('');
+        container.appendChild(block);
+      });
+      container.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const qIndex = parseInt(btn.dataset.q, 10);
+          const aIndex = parseInt(btn.dataset.a, 10);
+          const isMulti = btn.dataset.multi === '1';
+          if (isMulti) {
+            if (!Array.isArray(selectedAnswers[qIndex])) selectedAnswers[qIndex] = [];
+            const arr = selectedAnswers[qIndex];
+            const idx = arr.indexOf(aIndex);
+            if (idx > -1) { arr.splice(idx, 1); btn.classList.remove('selected'); }
+            else { arr.push(aIndex); btn.classList.add('selected'); }
+          } else {
+            selectedAnswers[qIndex] = aIndex;
+            btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+          }
+        });
+      });
+    }
+
+    const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
+    const totalMc = validQuestions.length;
+    const totalQuestions = PBQ_COUNT + totalMc;
+    const EXAM_MINUTES = 90;
+    let timerSeconds = EXAM_MINUTES * 60;
+    let timerInterval = null;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      const el = document.getElementById('timer-display');
+      const container = document.getElementById('exam-timer');
+      function tick() {
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          el.textContent = '0:00';
+          container.classList.add('low');
+          return;
+        }
+        el.textContent = formatTime(timerSeconds);
+        container.classList.toggle('low', timerSeconds < 600);
+        timerSeconds--;
+      }
+      tick();
+      timerInterval = setInterval(tick, 1000);
+    }
+    function stopTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+    function resetTimer() {
+      stopTimer();
+      timerSeconds = EXAM_MINUTES * 60;
+      document.getElementById('timer-display').textContent = formatTime(timerSeconds);
+      document.getElementById('exam-timer').classList.remove('low');
+      startTimer();
+    }
+
+    document.getElementById('quiz-progress').textContent = totalMc > 0 ? ('Questions 1–' + totalQuestions + ' (5 PBQs + ' + totalMc + ' multiple choice) • 90 min') : (PBQ_COUNT + ' PBQs');
+    startTimer();
+    renderMc();
+
+    function getPbqFeedback() {
+      const fb = [];
+      fb.push({ n: 1, ok: document.getElementById('pbq1-cause').value === PBQ_CORRECT.pbq1.cause && document.getElementById('pbq1-tool').value === PBQ_CORRECT.pbq1.tool && document.getElementById('pbq1-component').value === PBQ_CORRECT.pbq1.component });
+      const q2checked = pbq2Ids.filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value).sort().join(',');
+      fb.push({ n: 2, ok: q2checked === [...PBQ_CORRECT.pbq2].sort().join(',') });
+      let q3ok = true;
+      for (const key of Object.keys(PBQ_CORRECT.pbq3)) { if (matchAssignments[key] !== PBQ_CORRECT.pbq3[key]) q3ok = false; }
+      fb.push({ n: 3, ok: q3ok && Object.keys(matchAssignments).length === 5 });
+      const q4checked = pbq4Ids.filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value).sort().join(',');
+      fb.push({ n: 4, ok: q4checked === [...PBQ_CORRECT.pbq4].sort().join(',') });
+      fb.push({ n: 5, ok: document.getElementById('pbq5-type').value === PBQ_CORRECT.pbq5.type && document.getElementById('pbq5-scenario').value === PBQ_CORRECT.pbq5.scenario && document.getElementById('pbq5-work').value === PBQ_CORRECT.pbq5.work });
+      return fb;
+    }
+
+    document.getElementById('finish-btn').addEventListener('click', () => {
+      const pbqScore = gradePbqs();
+      const pbqFeedback = getPbqFeedback();
+      let mcScore = 0;
+      let weightedMcCorrect = 0;
+      let weightedMcMax = 0;
+      const mcResults = validQuestions.map((q, index) => {
+        const opts = q.options.filter(o => o && o.trim());
+        const userChoice = selectedAnswers[index];
+        const w = q.weight != null ? q.weight : 1;
+        weightedMcMax += w;
+        let isCorrect, userAnswer, correctAnswer;
+        if (q.multiSelect) {
+          const picked = Array.isArray(userChoice) ? [...userChoice].sort() : [];
+          const correct = Array.isArray(q.correctValues) ? [...q.correctValues].sort() : [];
+          isCorrect = picked.length === correct.length && picked.every((v, i) => v === correct[i]);
+          userAnswer = picked.length > 0 ? picked.map(i => opts[i]).join(', ') : '(not answered)';
+          correctAnswer = correct.map(i => opts[i]).join(', ');
+        } else {
+          isCorrect = userChoice === q.correctIndex;
+          userAnswer = userChoice !== undefined ? opts[userChoice] : '(not answered)';
+          correctAnswer = q.correctIndex >= 0 ? opts[q.correctIndex] : '(key not set)';
+        }
+        if (isCorrect) { mcScore++; weightedMcCorrect += w; }
+        return { text: q.text, correct: isCorrect, userAnswer: userAnswer, correctAnswer: correctAnswer };
+      });
+      const weightedPbqCorrect = pbqScore * PBQ_WEIGHT;
+      const weightedPbqMax = PBQ_COUNT * PBQ_WEIGHT;
+      const totalWeightedCorrect = weightedPbqCorrect + weightedMcCorrect;
+      const totalWeightedMax = weightedPbqMax + weightedMcMax;
+      const scaledScore = totalWeightedMax > 0 ? Math.round(SCALE_MIN + (totalWeightedCorrect / totalWeightedMax) * (SCALE_MAX - SCALE_MIN)) : SCALE_MIN;
+      const clampedScore = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scaledScore));
+      const passed = clampedScore >= PASSING_SCORE;
+
+      let breakdown = 'PBQs: ' + pbqScore + '/' + PBQ_COUNT + ' (weighted ×' + PBQ_WEIGHT + ')';
+      if (totalMc > 0) breakdown += ' &nbsp;•&nbsp; Multiple choice: ' + mcScore + '/' + totalMc;
+      breakdown += ' &nbsp;•&nbsp; Weighted total: ' + totalWeightedCorrect.toFixed(1) + '/' + totalWeightedMax.toFixed(1);
+
+      let resultsHtml = '<div class="results-card"><div class="score-big">' + clampedScore + ' / ' + SCALE_MAX + '</div><div class="score-label ' + (passed ? 'score-pass' : 'score-fail') + '">' + (passed ? 'Pass' : 'Fail') + ' (passing: ' + PASSING_SCORE + ')</div><div class="score-breakdown">' + breakdown + '</div>';
+      resultsHtml += '<div class="score-label" style="text-align:left; margin-bottom:0.5rem">PBQs: ' + pbqFeedback.map(f => 'PBQ ' + f.n + ' ' + (f.ok ? '✓' : '✗')).join(' &nbsp; ') + '</div>';
+      resultsHtml += mcResults.map(r => '<div class="result-item"><span class="result-icon ' + (r.correct ? 'correct' : 'wrong') + '">' + (r.correct ? '✓' : '✕') + '</span><div class="result-text"><strong>' + escapeHtml(r.text) + '</strong><span>Your answer: ' + escapeHtml(r.userAnswer) + (r.correct ? '' : ' — Correct: ' + escapeHtml(r.correctAnswer)) + '</span></div></div>').join('');
+      resultsHtml += '<div class="finish-row" style="margin-top:1.5rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take test again</button></div></div>';
+
+      document.getElementById('results-container').innerHTML = resultsHtml;
+      document.getElementById('results-container').style.display = 'block';
+      document.getElementById('pbq-section').style.display = 'none';
+      document.getElementById('quiz-questions').style.display = 'none';
+      document.getElementById('finish-btn').style.display = 'none';
+      document.getElementById('mc-section-label').style.display = 'none';
+      document.getElementById('exam-timer').style.display = 'none';
+      document.getElementById('quiz-progress').textContent = 'Results';
+      stopTimer();
+
+      document.getElementById('retake-btn').addEventListener('click', () => {
+        document.getElementById('results-container').style.display = 'none';
+        document.getElementById('results-container').innerHTML = '';
+        document.getElementById('pbq-section').style.display = 'block';
+        document.getElementById('quiz-questions').style.display = totalMc > 0 ? 'block' : 'none';
+        document.getElementById('finish-btn').style.display = 'block';
+        if (totalMc > 0) document.getElementById('mc-section-label').style.display = 'block';
+        document.getElementById('quiz-progress').textContent = totalMc > 0 ? ('Questions 1–' + totalQuestions + ' (5 PBQs + ' + totalMc + ' multiple choice) • 90 min') : (PBQ_COUNT + ' PBQs');
+        document.getElementById('exam-timer').style.display = '';
+        resetTimer();
+        selectedAnswers = {};
+        matchAssignments = {};
+        // Reset PBQ 1 dropdowns
+        document.getElementById('pbq1-cause').value = '';
+        document.getElementById('pbq1-tool').value = '';
+        document.getElementById('pbq1-component').value = '';
+        // Reset PBQ 2 checkboxes
+        pbq2Ids.forEach(id => { document.getElementById(id).checked = false; });
+        // Reset PBQ 3 drag-and-drop
+        document.querySelectorAll('.drop-zone').forEach(z => { z.textContent = ''; });
+        const pool = document.getElementById('chips-pool');
+        pool.innerHTML = '<span class="draggable-chip" draggable="true" data-protocol="Imaging drum">Imaging drum</span><span class="draggable-chip" draggable="true" data-protocol="Toner cartridge">Toner cartridge</span><span class="draggable-chip" draggable="true" data-protocol="Pickup roller">Pickup roller</span><span class="draggable-chip" draggable="true" data-protocol="Hard drive">Hard drive</span><span class="draggable-chip" draggable="true" data-protocol="Display cable">Display cable</span>';
+        pool.querySelectorAll('.draggable-chip').forEach(makeChipDraggable);
+        // Reset PBQ 4 checkboxes
+        pbq4Ids.forEach(id => { document.getElementById(id).checked = false; });
+        // Reset PBQ 5 dropdowns
+        document.getElementById('pbq5-type').value = '';
+        document.getElementById('pbq5-scenario').value = '';
+        document.getElementById('pbq5-work').value = '';
+        renderMc();
+      });
+    });
+  </script>
+</body>
+</html>

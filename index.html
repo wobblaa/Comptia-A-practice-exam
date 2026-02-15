@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompTIA A+ Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181d;
+      --border: #2a2a32;
+      --text: #e8e8ed;
+      --text-muted: #8888a0;
+      --accent: #7c5cff;
+      --accent-hover: #9278ff;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .app {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .links a {
+      display: block;
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .links a:hover {
+      border-color: var(--accent);
+      background: rgba(124, 92, 255, 0.1);
+    }
+    .links a.builder {
+      margin-top: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .links a.builder:hover {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>CompTIA A+ Quiz</h1>
+    <p class="subtitle">Choose a test to take.</p>
+    <nav class="links">
+      <a href="core1.html">Core 1 test</a>
+      <a href="core2.html">Core 2 test</a>
+      <a href="builder.html" class="builder">Build your own quiz</a>
+    </nav>
+  </div>
+</body>
+</html>

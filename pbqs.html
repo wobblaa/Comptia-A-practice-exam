@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Practice PBQs | CompTIA A+</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #0f0f12; --surface: #18181d; --surface-hover: #222228; --border: #2a2a32; --text: #e8e8ed; --text-muted: #8888a0; --accent: #7c5cff; --accent-hover: #9278ff; --correct: #22c55e; --wrong: #ef4444; --radius: 12px; --radius-sm: 8px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    .app { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .pbq-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .pbq-card h2 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .scenario { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 1rem; white-space: pre-wrap; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.35rem; }
+    .field select { width: 100%; padding: 0.65rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; cursor: pointer; }
+    .field select:focus { outline: none; border-color: var(--accent); }
+    .mc-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .mc-option { display: block; width: 100%; padding: 0.85rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .mc-option:hover { border-color: var(--accent); background: var(--surface-hover); }
+    .mc-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
+    .multiselect-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .checkbox-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; }
+    .checkbox-option:hover { border-color: var(--accent); }
+    .checkbox-option input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+    .match-area { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+    .match-column h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .match-slots { display: flex; flex-direction: column; gap: 0.5rem; }
+    .match-row { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); }
+    .match-row.drag-over { border-color: var(--accent); background: rgba(124, 92, 255, 0.1); }
+    .match-row .port { font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 2.5rem; }
+    .match-row .drop-zone { flex: 1; min-height: 32px; }
+    .draggable-chip { padding: 0.4rem 0.75rem; background: var(--accent); color: white; border-radius: var(--radius-sm); font-size: 0.85rem; cursor: grab; user-select: none; }
+    .draggable-chip:active { cursor: grabbing; }
+    .draggable-chip.dragging { opacity: 0.6; }
+    .chips-pool { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .btn { padding: 0.9rem 2rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 500; cursor: pointer; background: var(--accent); color: white; }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--text-muted); margin-left: 0.5rem; }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+    .results-summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+    .results-summary .score { font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+    .pbq-feedback { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+    .pbq-feedback.correct { color: var(--correct); }
+    .pbq-feedback.wrong { color: var(--wrong); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <a href="index.html" class="back-link">← Back to home</a>
+    <h1>Practice PBQs</h1>
+    <p class="subtitle">Performance-based questions with drag-and-drop and scenario dropdowns.</p>
+
+    <!-- PBQ 1: No internet / APIPA -->
+    <div class="pbq-card" data-pbq="1">
+      <h2>PBQ 1</h2>
+      <div class="scenario">A user reports no internet access. You run ipconfig and see:
+
+IPv4 Address: 169.254.45.12
+Subnet Mask: 255.255.0.0
+Default Gateway: (blank)</div>
+      <div class="field">
+        <label>What is the issue?</label>
+        <select id="pbq1-issue">
+          <option value="">— Select —</option>
+          <option value="apipa">APIPA/self-assigned address (no DHCP)</option>
+          <option value="wrong-ip">Wrong static IP configured</option>
+          <option value="dns">DNS resolution failure</option>
+          <option value="gateway">Default gateway misconfigured</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>What is the MOST likely cause?</label>
+        <select id="pbq1-cause">
+          <option value="">— Select —</option>
+          <option value="dhcp">DHCP server unreachable or failing</option>
+          <option value="cable">Physical cable unplugged</option>
+          <option value="firewall">Firewall blocking DHCP</option>
+          <option value="router">Router not forwarding DHCP</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>What is the FIRST troubleshooting step you should take?</label>
+        <select id="pbq1-step">
+          <option value="">— Select —</option>
+          <option value="physical">Check physical connection / cable</option>
+          <option value="renew">Run ipconfig /renew</option>
+          <option value="dhcp-check">Verify DHCP server is running</option>
+          <option value="reboot">Reboot the router</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PBQ 2: Router wireless -->
+    <div class="pbq-card" data-pbq="2">
+      <h2>PBQ 2</h2>
+      <div class="scenario">You are configuring a small office router. The requirements are:
+• Secure wireless access
+• Prevent password cracking via WPS
+• Encrypt traffic properly
+• Use strongest available consumer standard</div>
+      <div class="field">
+        <label>Security mode</label>
+        <select id="pbq2-security">
+          <option value="">— Select —</option>
+          <option value="wpa3">WPA3 (or WPA2 if WPA3 not available)</option>
+          <option value="wpa2">WPA2</option>
+          <option value="wpa">WPA</option>
+          <option value="wep">WEP</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Encryption type</label>
+        <select id="pbq2-encryption">
+          <option value="">— Select —</option>
+          <option value="aes">AES</option>
+          <option value="tkip">TKIP</option>
+          <option value="mixed">TKIP+AES (mixed)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Feature to disable</label>
+        <select id="pbq2-disable">
+          <option value="">— Select —</option>
+          <option value="wps">WPS (Wi-Fi Protected Setup)</option>
+          <option value="ssid">SSID broadcast</option>
+          <option value="upnp">UPnP</option>
+          <option value="remote">Remote management</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PBQ 3: Port match drag-and-drop -->
+    <div class="pbq-card" data-pbq="3">
+      <h2>PBQ 3</h2>
+      <p style="margin-bottom: 0.75rem;">Match the port numbers to the correct protocol. Drag each protocol to the port it uses.</p>
+      <div class="match-area">
+        <div class="match-column">
+          <h3>Port</h3>
+          <div class="match-slots" id="match-slots">
+            <div class="match-row" data-port="21"><span class="port">21</span><div class="drop-zone" data-port="21"></div></div>
+            <div class="match-row" data-port="22"><span class="port">22</span><div class="drop-zone" data-port="22"></div></div>
+            <div class="match-row" data-port="25"><span class="port">25</span><div class="drop-zone" data-port="25"></div></div>
+            <div class="match-row" data-port="53"><span class="port">53</span><div class="drop-zone" data-port="53"></div></div>
+            <div class="match-row" data-port="80"><span class="port">80</span><div class="drop-zone" data-port="80"></div></div>
+            <div class="match-row" data-port="110"><span class="port">110</span><div class="drop-zone" data-port="110"></div></div>
+            <div class="match-row" data-port="143"><span class="port">143</span><div class="drop-zone" data-port="143"></div></div>
+            <div class="match-row" data-port="443"><span class="port">443</span><div class="drop-zone" data-port="443"></div></div>
+          </div>
+        </div>
+        <div class="match-column">
+          <h3>Protocol (drag to port)</h3>
+          <div class="chips-pool" id="chips-pool">
+            <span class="draggable-chip" draggable="true" data-protocol="FTP">FTP</span>
+            <span class="draggable-chip" draggable="true" data-protocol="SSH">SSH</span>
+            <span class="draggable-chip" draggable="true" data-protocol="SMTP">SMTP</span>
+            <span class="draggable-chip" draggable="true" data-protocol="DNS">DNS</span>
+            <span class="draggable-chip" draggable="true" data-protocol="HTTP">HTTP</span>
+            <span class="draggable-chip" draggable="true" data-protocol="POP3">POP3</span>
+            <span class="draggable-chip" draggable="true" data-protocol="IMAP">IMAP</span>
+            <span class="draggable-chip" draggable="true" data-protocol="HTTPS">HTTPS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PBQ 4: Laser printer multiple choice -->
+    <div class="pbq-card" data-pbq="4">
+      <h2>PBQ 4</h2>
+      <p style="margin-bottom: 1rem;">A laser printer is producing faded prints across the entire page.</p>
+      <p style="margin-bottom: 0.5rem; font-weight: 500;">What component is MOST likely failing?</p>
+      <div class="mc-options">
+        <button type="button" class="mc-option" data-value="A">A. Fuser</button>
+        <button type="button" class="mc-option" data-value="B">B. Transfer roller</button>
+        <button type="button" class="mc-option" data-value="C">C. Toner cartridge</button>
+        <button type="button" class="mc-option" data-value="D">D. Imaging drum</button>
+      </div>
+      <input type="hidden" id="pbq4-answer" value="">
+    </div>
+
+    <!-- PBQ 5: Virtualization - choose TWO -->
+    <div class="pbq-card" data-pbq="5">
+      <h2>PBQ 5</h2>
+      <p style="margin-bottom: 0.5rem;">You are upgrading a workstation to support virtualization.</p>
+      <p class="multiselect-hint">Which TWO hardware requirements must be enabled or present? (Select exactly 2.)</p>
+      <div class="checkbox-option"><input type="checkbox" id="pbq5-A" value="A"><label for="pbq5-A">A. TPM</label></div>
+      <div class="checkbox-option"><input type="checkbox" id="pbq5-B" value="B"><label for="pbq5-B">B. CPU virtualization support</label></div>
+      <div class="checkbox-option"><input type="checkbox" id="pbq5-C" value="C"><label for="pbq5-C">C. UEFI secure boot</label></div>
+      <div class="checkbox-option"><input type="checkbox" id="pbq5-D" value="D"><label for="pbq5-D">D. Sufficient RAM</label></div>
+      <div class="checkbox-option"><input type="checkbox" id="pbq5-E" value="E"><label for="pbq5-E">E. RAID</label></div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+      <button type="button" class="btn" id="grade-btn">Grade PBQs</button>
+      <button type="button" class="btn btn-ghost" id="reset-btn">Reset</button>
+    </div>
+    <div id="results-area" style="display: none; margin-top: 1.5rem;"></div>
+  </div>
+
+  <script>
+    const CORRECT = {
+      pbq1: { issue: 'apipa', cause: 'dhcp', step: 'physical' },
+      pbq2: { security: 'wpa3', encryption: 'aes', disable: 'wps' },
+      pbq3: { 21: 'FTP', 22: 'SSH', 25: 'SMTP', 53: 'DNS', 80: 'HTTP', 110: 'POP3', 143: 'IMAP', 443: 'HTTPS' },
+      pbq4: 'C',
+      pbq5: ['B', 'D']
+    };
+
+    document.querySelectorAll('.mc-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-pbq="4"] .mc-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('pbq4-answer').value = btn.dataset.value;
+      });
+    });
+
+    const maxTwo = ['pbq5-A','pbq5-B','pbq5-C','pbq5-D','pbq5-E'];
+    maxTwo.forEach(id => {
+      document.getElementById(id).addEventListener('change', function() {
+        const checked = maxTwo.filter(i => document.getElementById(i).checked);
+        if (checked.length > 2) this.checked = false;
+      });
+    });
+
+    let matchAssignments = {};
+    let draggedChip = null;
+    const chipsPool = document.getElementById('chips-pool');
+    const dropZones = document.querySelectorAll('.drop-zone');
+
+    function makeChipDraggable(chip) {
+      chip.draggable = true;
+      chip.dataset.protocol = chip.textContent.trim();
+      chip.classList.add('draggable-chip');
+      chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', chip.dataset.protocol);
+        e.dataTransfer.effectAllowed = 'move';
+        chip.classList.add('dragging');
+        draggedChip = chip;
+      });
+      chip.addEventListener('dragend', () => { chip.classList.remove('dragging'); draggedChip = null; });
+    }
+
+    document.querySelectorAll('#chips-pool .draggable-chip').forEach(makeChipDraggable);
+
+    dropZones.forEach(zone => {
+      zone.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; zone.closest('.match-row').classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.closest('.match-row').classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.closest('.match-row').classList.remove('drag-over');
+        const port = zone.dataset.port;
+        if (zone.firstChild) {
+          const old = zone.firstChild;
+          const oldProtocol = old.dataset.protocol;
+          delete matchAssignments[port];
+          old.remove();
+          const back = document.createElement('span');
+          back.textContent = oldProtocol;
+          back.dataset.protocol = oldProtocol;
+          makeChipDraggable(back);
+          chipsPool.appendChild(back);
+        }
+        if (draggedChip) {
+          draggedChip.remove();
+          zone.appendChild(draggedChip);
+          matchAssignments[port] = draggedChip.dataset.protocol;
+          draggedChip = null;
+        }
+      });
+    });
+
+    chipsPool.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    chipsPool.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedChip && draggedChip.parentElement && draggedChip.parentElement.classList.contains('drop-zone')) {
+        const port = draggedChip.parentElement.dataset.port;
+        delete matchAssignments[port];
+        draggedChip.parentElement.removeChild(draggedChip);
+        chipsPool.appendChild(draggedChip);
+      }
+    });
+
+    function grade() {
+      let score = 0;
+      const total = 5;
+      const feedback = [];
+
+      const q1 = { issue: document.getElementById('pbq1-issue').value, cause: document.getElementById('pbq1-cause').value, step: document.getElementById('pbq1-step').value };
+      const q1ok = q1.issue === CORRECT.pbq1.issue && q1.cause === CORRECT.pbq1.cause && q1.step === CORRECT.pbq1.step;
+      if (q1ok) score++;
+      feedback.push({ n: 1, ok: q1ok });
+
+      const q2 = { security: document.getElementById('pbq2-security').value, encryption: document.getElementById('pbq2-encryption').value, disable: document.getElementById('pbq2-disable').value };
+      const q2ok = q2.security === CORRECT.pbq2.security && q2.encryption === CORRECT.pbq2.encryption && q2.disable === CORRECT.pbq2.disable;
+      if (q2ok) score++;
+      feedback.push({ n: 2, ok: q2ok });
+
+      let q3ok = true;
+      for (const port of Object.keys(CORRECT.pbq3)) {
+        if (matchAssignments[port] !== CORRECT.pbq3[port]) q3ok = false;
+      }
+      if (q3ok && Object.keys(matchAssignments).length === 8) score++;
+      feedback.push({ n: 3, ok: q3ok });
+
+      const q4 = document.getElementById('pbq4-answer').value;
+      const q4ok = q4 === CORRECT.pbq4;
+      if (q4ok) score++;
+      feedback.push({ n: 4, ok: q4ok });
+
+      const q5checked = maxTwo.filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value);
+      const q5ok = q5checked.length === 2 && q5checked.includes('B') && q5checked.includes('D');
+      if (q5ok) score++;
+      feedback.push({ n: 5, ok: q5ok });
+
+      const area = document.getElementById('results-area');
+      area.style.display = 'block';
+      area.innerHTML = '<div class="results-summary"><div class="score">' + score + ' / ' + total + '</div><p class="pbq-feedback">' + feedback.map(f => 'PBQ ' + f.n + ': ' + (f.ok ? '✓ Correct' : '✗ Review')).join('<br>') + '</p></div>';
+    }
+
+    document.getElementById('grade-btn').addEventListener('click', grade);
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      document.getElementById('pbq1-issue').value = '';
+      document.getElementById('pbq1-cause').value = '';
+      document.getElementById('pbq1-step').value = '';
+      document.getElementById('pbq2-security').value = '';
+      document.getElementById('pbq2-encryption').value = '';
+      document.getElementById('pbq2-disable').value = '';
+      matchAssignments = {};
+      document.querySelectorAll('.drop-zone').forEach(z => { z.textContent = ''; });
+      document.querySelectorAll('[data-pbq="4"] .mc-option').forEach(b => b.classList.remove('selected'));
+      document.getElementById('pbq4-answer').value = '';
+      maxTwo.forEach(id => { document.getElementById(id).checked = false; });
+      document.getElementById('results-area').style.display = 'none';
+    });
+  </script>
+</body>
+</html>

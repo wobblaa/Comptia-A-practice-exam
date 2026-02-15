@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Builder & Grader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181d;
+      --surface-hover: #222228;
+      --border: #2a2a32;
+      --text: #e8e8ed;
+      --text-muted: #8888a0;
+      --accent: #7c5cff;
+      --accent-hover: #9278ff;
+      --correct: #22c55e;
+      --wrong: #ef4444;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      background: var(--surface);
+      padding: 0.25rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    /* Build panel */
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .question-card h3 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2);
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .option-row input[type="text"] {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .option-row input[type="radio"] {
+      accent-color: var(--accent);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 0.65rem 1.25rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--wrong);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .add-question {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.85rem;
+      border: 2px dashed var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.95rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-question:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    /* Take quiz panel */
+    .quiz-progress {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .quiz-question {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-question h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+
+    .quiz-option {
+      display: block;
+      width: 100%;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.5rem;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
+
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(124, 92, 255, 0.15);
+    }
+
+    .finish-row {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .finish-btn {
+      padding: 0.9rem 2rem;
+      font-size: 1rem;
+    }
+
+    /* Results */
+    .results-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .score-big {
+      font-size: 3rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .score-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .result-icon.correct {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--correct);
+    }
+
+    .result-icon.wrong {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--wrong);
+    }
+
+    .result-text {
+      flex: 1;
+    }
+
+    .result-text strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .result-text span {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state p {
+      margin-bottom: 1rem;
+    }
+
+    .bulk-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bulk-section h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .bulk-section .hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .bulk-section textarea {
+      min-height: 120px;
+      margin-bottom: 0.75rem;
+    }
+
+    .bulk-section .btn {
+      margin-right: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .share-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .share-actions .file-input {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Quiz Builder</h1>
+    <p class="subtitle">Add questions, take the quiz, then click Finish to see your score.</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="build">Build Quiz</button>
+      <button class="tab" data-tab="take">Take Quiz</button>
+    </div>
+
+    <!-- Build Quiz -->
+    <div id="build-panel" class="panel active">
+      <div class="bulk-section">
+        <h3>Share quiz</h3>
+        <p class="hint">Send the link or file to your coworker so they can take the same quiz.</p>
+        <div class="share-actions">
+          <button type="button" class="btn btn-primary" id="copy-link-btn">Copy share link</button>
+          <button type="button" class="btn btn-ghost" id="download-btn">Download quiz file</button>
+        </div>
+      </div>
+      <div class="bulk-section">
+        <h3>Load shared quiz</h3>
+        <p class="hint">Open a quiz your coworker sent you, or load from a file.</p>
+        <div class="share-actions">
+          <button type="button" class="btn btn-primary" id="load-file-btn">Open quiz file…</button>
+          <input type="file" class="file-input" id="quiz-file-input" accept=".json,application/json">
+        </div>
+      </div>
+      <div class="bulk-section">
+        <h3>Bulk import (paste without answers)</h3>
+        <p class="hint">Paste all questions first. For each question: <strong>first line</strong> = question text, <strong>next 4 lines</strong> = options A, B, C, D. Separate questions with a blank line.</p>
+        <textarea id="bulk-questions" placeholder="What is 2+2?&#10;3&#10;4&#10;5&#10;6&#10;&#10;Capital of France?&#10;London&#10;Paris&#10;Berlin&#10;Madrid"></textarea>
+        <button type="button" class="btn btn-primary" id="import-questions">Import questions</button>
+      </div>
+      <div class="bulk-section">
+        <h3>Paste answer key (after questions are in)</h3>
+        <p class="hint">One letter (A–D) per question, in order. e.g. <strong>B D A C</strong> or <strong>B,D,A,C</strong></p>
+        <textarea id="answer-key" placeholder="B D A C"></textarea>
+        <button type="button" class="btn btn-primary" id="apply-answer-key">Apply answer key</button>
+      </div>
+      <div id="questions-container"></div>
+      <button type="button" class="add-question" id="add-question">+ Add question</button>
+    </div>
+
+    <!-- Take Quiz -->
+    <div id="take-panel" class="panel">
+      <div id="quiz-container">
+        <p class="quiz-progress" id="quiz-progress"></p>
+        <div id="quiz-questions"></div>
+        <div class="finish-row" id="finish-row" style="display: none;">
+          <button type="button" class="btn btn-primary finish-btn" id="finish-btn">Finish &amp; grade</button>
+        </div>
+        <div id="results-container" style="display: none;"></div>
+      </div>
+      <div id="empty-quiz" class="empty-state" style="display: none;">
+        <p>No questions yet. Add some in the Build Quiz tab.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let questions = JSON.parse(localStorage.getItem('quiz-questions') || '[]');
+
+    function save() {
+      localStorage.setItem('quiz-questions', JSON.stringify(questions));
+    }
+
+    function encodeQuizForUrl() {
+      const json = JSON.stringify(questions);
+      return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_');
+    }
+
+    function decodeQuizFromUrl(str) {
+      try {
+        const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(decodeURIComponent(escape(atob(base64))));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function loadQuizFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.slice(1);
+      const fromParam = params.get('quiz');
+      const fromHash = hash.startsWith('quiz=') ? hash.slice(5) : null;
+      const encoded = fromParam || fromHash;
+      if (!encoded) return;
+      const loaded = decodeQuizFromUrl(encoded);
+      if (loaded && Array.isArray(loaded) && loaded.length > 0) {
+        questions = loaded;
+        save();
+        renderBuild();
+        history.replaceState(null, '', window.location.pathname);
+      }
+    }
+
+    document.getElementById('copy-link-btn').addEventListener('click', () => {
+      const encoded = encodeQuizForUrl();
+      if (encoded.length > 1800) {
+        alert('Quiz is too long for a link. Use "Download quiz file" and send the file instead.');
+        return;
+      }
+      const url = window.location.origin + window.location.pathname + '?quiz=' + encoded;
+      navigator.clipboard.writeText(url).then(() => alert('Share link copied to clipboard. Send it to your coworker!')).catch(() => alert('Could not copy. Try "Download quiz file" and send the file.'));
+    });
+
+    document.getElementById('download-btn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'quiz.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('load-file-btn').addEventListener('click', () => document.getElementById('quiz-file-input').click());
+    document.getElementById('quiz-file-input').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const loaded = JSON.parse(reader.result);
+          if (Array.isArray(loaded) && loaded.length > 0) {
+            questions = loaded;
+            save();
+            renderBuild();
+            alert('Quiz loaded.');
+          } else {
+            alert('File does not contain a valid quiz.');
+          }
+        } catch (err) {
+          alert('Could not read file. Make sure it is a valid quiz JSON.');
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    function renderBuild() {
+      const container = document.getElementById('questions-container');
+      container.innerHTML = '';
+
+      questions.forEach((q, index) => {
+        const opts = [...(q.options || []), '', '', ''].slice(0, 4);
+        if (opts.length < 4) opts.push(...Array(4 - opts.length).fill(''));
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.dataset.index = index;
+        card.innerHTML = `
+          <h3>Question ${index + 1}</h3>
+          <textarea placeholder="Question text" class="q-text">${escapeHtml(q.text)}</textarea>
+          <div class="options-list">
+            ${opts.map((opt, i) => `
+              <div class="option-row">
+                <input type="radio" name="correct-${index}" ${i === q.correctIndex ? 'checked' : ''} value="${i}">
+                <input type="text" class="opt-text" placeholder="${'ABCD'[i]})" value="${escapeHtml(opt)}">
+              </div>
+            `).join('')}
+          </div>
+          <div class="card-actions">
+            <button type="button" class="btn btn-danger btn-remove">Remove</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      container.querySelectorAll('.question-card').forEach(card => {
+        const index = parseInt(card.dataset.index, 10);
+        const textarea = card.querySelector('.q-text');
+        const optInputs = card.querySelectorAll('.opt-text');
+        const radioInputs = card.querySelectorAll('input[type="radio"]');
+        if (!questions[index].options) questions[index].options = [];
+        while (questions[index].options.length < 4) questions[index].options.push('');
+
+        textarea.addEventListener('change', () => {
+          questions[index].text = textarea.value.trim();
+          save();
+        });
+
+        optInputs.forEach((input, i) => {
+          input.addEventListener('change', () => {
+            questions[index].options[i] = input.value.trim();
+            save();
+          });
+        });
+
+        radioInputs.forEach((radio, i) => {
+          radio.addEventListener('change', () => {
+            if (radio.checked) questions[index].correctIndex = i;
+            save();
+          });
+        });
+
+        card.querySelector('.btn-remove').addEventListener('click', () => {
+          questions.splice(index, 1);
+          save();
+          renderBuild();
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    document.getElementById('add-question').addEventListener('click', () => {
+      questions.push({
+        text: '',
+        options: ['', '', '', ''],
+        correctIndex: 0
+      });
+      save();
+      renderBuild();
+    });
+
+    // Bulk import: first line = question, next 4 lines = A,B,C,D. Blocks separated by blank line(s).
+    document.getElementById('import-questions').addEventListener('click', () => {
+      const raw = document.getElementById('bulk-questions').value.trim();
+      if (!raw) return;
+      const blocks = raw.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+      const imported = [];
+      for (const block of blocks) {
+        const lines = block.split('\n').map(l => l.trim());
+        const text = lines[0] || '';
+        const options = [
+          lines[1] ?? '',
+          lines[2] ?? '',
+          lines[3] ?? '',
+          lines[4] ?? ''
+        ];
+        imported.push({ text, options, correctIndex: 0 });
+      }
+      questions = imported;
+      save();
+      renderBuild();
+      document.getElementById('bulk-questions').value = '';
+    });
+
+    // Answer key: space/comma separated A–D, one per question in order.
+    document.getElementById('apply-answer-key').addEventListener('click', () => {
+      const raw = document.getElementById('answer-key').value.trim().toUpperCase();
+      const letters = raw.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+      const map = { A: 0, B: 1, C: 2, D: 3 };
+      letters.forEach((letter, i) => {
+        if (i < questions.length && letter in map) {
+          questions[i].correctIndex = map[letter];
+        }
+      });
+      save();
+      renderBuild();
+      document.getElementById('answer-key').value = '';
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab + '-panel').classList.add('active');
+        if (tab.dataset.tab === 'take') renderTake();
+      });
+    });
+
+    let selectedAnswers = {};
+
+    function renderTake() {
+      const quizQuestions = document.getElementById('quiz-questions');
+      const progress = document.getElementById('quiz-progress');
+      const finishRow = document.getElementById('finish-row');
+      const resultsContainer = document.getElementById('results-container');
+      const emptyQuiz = document.getElementById('empty-quiz');
+
+      const validQuestions = questions.filter(q => q.text.trim() && q.options.filter(o => o.trim()).length >= 2);
+
+      if (validQuestions.length === 0) {
+        quizQuestions.innerHTML = '';
+        finishRow.style.display = 'none';
+        resultsContainer.style.display = 'none';
+        emptyQuiz.style.display = 'block';
+        return;
+      }
+
+      emptyQuiz.style.display = 'none';
+      resultsContainer.style.display = 'none';
+      selectedAnswers = {};
+      finishRow.style.display = 'flex';
+
+      progress.textContent = `${validQuestions.length} question${validQuestions.length !== 1 ? 's' : ''}`;
+      quizQuestions.innerHTML = '';
+
+      validQuestions.forEach((q, index) => {
+        const opts = q.options.filter(o => o.trim());
+        const block = document.createElement('div');
+        block.className = 'quiz-question';
+        block.innerHTML = `
+          <h2>${index + 1}. ${escapeHtml(q.text)}</h2>
+          ${opts.map((opt, i) => `
+            <button type="button" class="quiz-option" data-q="${index}" data-a="${i}">${escapeHtml(opt)}</button>
+          `).join('')}
+        `;
+        quizQuestions.appendChild(block);
+      });
+
+      quizQuestions.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const qIndex = parseInt(btn.dataset.q, 10);
+          const aIndex = parseInt(btn.dataset.a, 10);
+          selectedAnswers[qIndex] = aIndex;
+          btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    }
+
+    document.getElementById('finish-btn').addEventListener('click', () => {
+      const validQuestions = questions.filter(q => q.text.trim() && q.options.filter(o => o.trim()).length >= 2);
+      let correct = 0;
+      const results = validQuestions.map((q, index) => {
+        const opts = q.options.filter(o => o.trim());
+        const userChoice = selectedAnswers[index];
+        const isCorrect = userChoice === q.correctIndex;
+        if (isCorrect) correct++;
+        return {
+          text: q.text,
+          correct: isCorrect,
+          userAnswer: userChoice !== undefined ? opts[userChoice] : '(not answered)',
+          correctAnswer: opts[q.correctIndex]
+        };
+      });
+
+      const score = validQuestions.length ? Math.round((correct / validQuestions.length) * 100) : 0;
+      const resultsContainer = document.getElementById('results-container');
+      resultsContainer.style.display = 'block';
+      resultsContainer.innerHTML = `
+        <div class="results-card">
+          <div class="score-big">${correct}/${validQuestions.length}</div>
+          <div class="score-label">${score}%</div>
+          ${results.map((r, i) => `
+            <div class="result-item">
+              <span class="result-icon ${r.correct ? 'correct' : 'wrong'}">${r.correct ? '✓' : '✕'}</span>
+              <div class="result-text">
+                <strong>${escapeHtml(r.text)}</strong>
+                <span>Your answer: ${escapeHtml(r.userAnswer)}${!r.correct ? ' — Correct: ' + escapeHtml(r.correctAnswer) : ''}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="finish-row" style="margin-top: 1rem;">
+          <button type="button" class="btn btn-ghost" id="retake-btn">Take quiz again</button>
+        </div>
+      `;
+
+      document.getElementById('quiz-questions').style.display = 'none';
+      document.getElementById('finish-row').style.display = 'none';
+      document.getElementById('quiz-progress').textContent = 'Results';
+
+      resultsContainer.querySelector('#retake-btn').addEventListener('click', () => {
+        document.getElementById('results-container').style.display = 'none';
+        document.getElementById('results-container').innerHTML = '';
+        renderTake();
+        document.getElementById('quiz-questions').style.display = '';
+      });
+    });
+
+    loadQuizFromUrl();
+    renderBuild();
+  </script>
+</body>
+</html>

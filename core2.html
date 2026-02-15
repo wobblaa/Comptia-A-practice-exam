@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompTIA A+ Core 2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #0f0f12; --surface: #18181d; --surface-hover: #222228; --border: #2a2a32; --text: #e8e8ed; --text-muted: #8888a0; --accent: #7c5cff; --accent-hover: #9278ff; --correct: #22c55e; --wrong: #ef4444; --radius: 12px; --radius-sm: 8px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    .app { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .quiz-progress { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .quiz-question h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.4; }
+    .quiz-option { display: block; width: 100%; padding: 1rem 1.25rem; margin-bottom: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .quiz-option:hover { border-color: var(--accent); background: var(--surface-hover); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
+    .finish-row { margin-top: 1.5rem; display: flex; justify-content: center; }
+    .btn { padding: 0.9rem 2rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 500; cursor: pointer; background: var(--accent); color: white; }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+    .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; text-align: center; margin-bottom: 1.5rem; }
+    .score-big { font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); margin-bottom: 0.25rem; }
+    .score-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); text-align: left; }
+    .result-item:last-child { border-bottom: none; }
+    .result-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+    .result-icon.correct { background: rgba(34, 197, 94, 0.2); color: var(--correct); }
+    .result-icon.wrong { background: rgba(239, 68, 68, 0.2); color: var(--wrong); }
+    .result-text strong { display: block; margin-bottom: 0.25rem; }
+    .result-text span { color: var(--text-muted); font-size: 0.9rem; }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <a href="index.html" class="back-link">← Back to home</a>
+    <h1>CompTIA A+ Core 2</h1>
+    <p class="quiz-progress" id="quiz-progress"></p>
+    <div id="quiz-questions"></div>
+    <div class="finish-row" id="finish-row" style="display: none;">
+      <button type="button" class="btn" id="finish-btn">Finish &amp; grade</button>
+    </div>
+    <div id="results-container" style="display: none;"></div>
+    <div id="empty-quiz" class="empty-state" style="display: none;">
+      <p>No questions in this test yet. Check back later or use Build your own quiz from the home page.</p>
+    </div>
+  </div>
+  <script>
+    const questions = [];
+    function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    let selectedAnswers = {};
+    function renderTake() {
+      const quizQuestions = document.getElementById('quiz-questions'); const progress = document.getElementById('quiz-progress'); const finishRow = document.getElementById('finish-row'); const resultsContainer = document.getElementById('results-container'); const emptyQuiz = document.getElementById('empty-quiz');
+      const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
+      if (validQuestions.length === 0) { quizQuestions.innerHTML = ''; finishRow.style.display = 'none'; resultsContainer.style.display = 'none'; emptyQuiz.style.display = 'block'; return; }
+      emptyQuiz.style.display = 'none'; resultsContainer.style.display = 'none'; selectedAnswers = {}; finishRow.style.display = 'flex';
+      progress.textContent = validQuestions.length + ' question' + (validQuestions.length !== 1 ? 's' : '');
+      quizQuestions.innerHTML = '';
+      validQuestions.forEach((q, index) => { const opts = q.options.filter(o => o && o.trim()); const block = document.createElement('div'); block.className = 'quiz-question'; block.innerHTML = `<h2>${index + 1}. ${escapeHtml(q.text)}</h2>${opts.map((opt, i) => `<button type="button" class="quiz-option" data-q="${index}" data-a="${i}">${escapeHtml(opt)}</button>`).join('')}`; quizQuestions.appendChild(block); });
+      quizQuestions.querySelectorAll('.quiz-option').forEach(btn => { btn.addEventListener('click', () => { const qIndex = parseInt(btn.dataset.q, 10); const aIndex = parseInt(btn.dataset.a, 10); selectedAnswers[qIndex] = aIndex; btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }); });
+    }
+    document.getElementById('finish-btn').addEventListener('click', () => {
+      const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
+      let correct = 0; const results = validQuestions.map((q, index) => { const opts = q.options.filter(o => o && o.trim()); const userChoice = selectedAnswers[index]; const isCorrect = userChoice === q.correctIndex; if (isCorrect) correct++; return { text: q.text, correct: isCorrect, userAnswer: userChoice !== undefined ? opts[userChoice] : '(not answered)', correctAnswer: opts[q.correctIndex] }; });
+      const score = validQuestions.length ? Math.round((correct / validQuestions.length) * 100) : 0;
+      const resultsContainer = document.getElementById('results-container'); resultsContainer.style.display = 'block';
+      resultsContainer.innerHTML = `<div class="results-card"><div class="score-big">${correct}/${validQuestions.length}</div><div class="score-label">${score}%</div>${results.map(r => `<div class="result-item"><span class="result-icon ${r.correct ? 'correct' : 'wrong'}">${r.correct ? '✓' : '✕'}</span><div class="result-text"><strong>${escapeHtml(r.text)}</strong><span>Your answer: ${escapeHtml(r.userAnswer)}${!r.correct ? ' — Correct: ' + escapeHtml(r.correctAnswer) : ''}</span></div></div>`).join('')}</div><div class="finish-row" style="margin-top:1rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take quiz again</button></div>`;
+      document.getElementById('quiz-questions').style.display = 'none'; document.getElementById('finish-row').style.display = 'none'; document.getElementById('quiz-progress').textContent = 'Results';
+      resultsContainer.querySelector('#retake-btn').addEventListener('click', () => { resultsContainer.style.display = 'none'; resultsContainer.innerHTML = ''; renderTake(); document.getElementById('quiz-questions').style.display = ''; });
+    });
+    renderTake();
+  </script>
+</body>
+</html>
