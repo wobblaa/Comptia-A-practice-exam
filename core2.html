@@ -78,6 +78,7 @@
     .result-text strong { display: block; margin-bottom: 0.25rem; }
     .result-text span { color: var(--text-muted); font-size: 0.9rem; }
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
     @media (max-width: 600px) {
       .app { padding: 1rem; overflow-x: hidden; }
       .pbq-card { padding: 1rem; overflow-x: hidden; }
@@ -468,6 +469,93 @@ Gateway: blank</div>
       if (q5ok && Object.keys(matchAssignments).length === 4) score++;
       return score;
     }
+    function launchConfetti() {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'confetti-canvas';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const pieces = [];
+      const colors = ['#7c5cff','#5ce1ff','#22c55e','#f59e0b','#ef4444','#ec4899','#a855f7','#14b8a6','#fbbf24'];
+      for (let i = 0; i < 400; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          w: Math.random() * 14 + 6,
+          h: Math.random() * 10 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vy: Math.random() * 6 + 4,
+          vx: (Math.random() - 0.5) * 6,
+          rot: Math.random() * 360,
+          rv: (Math.random() - 0.5) * 12
+        });
+      }
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+          p.vy += 0.08;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.max(0, 1 - frames / 180);
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 200) requestAnimationFrame(draw);
+        else canvas.remove();
+      }
+      draw();
+      setTimeout(() => {
+        const canvas2 = document.createElement('canvas');
+        canvas2.id = 'confetti-canvas-2';
+        canvas2.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+        document.body.appendChild(canvas2);
+        const ctx2 = canvas2.getContext('2d');
+        canvas2.width = window.innerWidth;
+        canvas2.height = window.innerHeight;
+        const pieces2 = [];
+        for (let i = 0; i < 200; i++) {
+          pieces2.push({
+            x: Math.random() * canvas2.width,
+            y: -20,
+            w: Math.random() * 12 + 4,
+            h: Math.random() * 8 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vy: Math.random() * 5 + 3,
+            vx: (Math.random() - 0.5) * 4,
+            rot: Math.random() * 360,
+            rv: (Math.random() - 0.5) * 10,
+            delay: Math.floor(Math.random() * 30)
+          });
+        }
+        let f = 0;
+        function draw2() {
+          ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+          pieces2.forEach(p => {
+            if (f > p.delay) {
+              p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+              p.vy += 0.06;
+              ctx2.save();
+              ctx2.translate(p.x, p.y);
+              ctx2.rotate(p.rot * Math.PI / 180);
+              ctx2.fillStyle = p.color;
+              ctx2.globalAlpha = Math.max(0, 1 - (f - p.delay) / 150);
+              ctx2.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+              ctx2.restore();
+            }
+          });
+          f++;
+          if (f < 180) requestAnimationFrame(draw2);
+          else canvas2.remove();
+        }
+        draw2();
+      }, 400);
+    }
     function getPbqFeedback() {
       const fb = [];
       fb.push({ n: 1, ok: document.getElementById('pbq1-cause').value === PBQ_CORRECT.pbq1.cause && document.getElementById('pbq1-action1').value === PBQ_CORRECT.pbq1.action1 && document.getElementById('pbq1-action2').value === PBQ_CORRECT.pbq1.action2 && document.getElementById('pbq1-tool').value === PBQ_CORRECT.pbq1.tool });
@@ -604,6 +692,8 @@ Gateway: blank</div>
       const total = PBQ_COUNT + validQuestions.length;
       const totalCorrect = pbqScore + mcScore;
       const pct = total > 0 ? Math.round((totalCorrect / total) * 100) : 0;
+      const scaledScore = total > 0 ? Math.round(100 + (totalCorrect / total) * 800) : 100;
+      const passed = scaledScore >= 700;
       stopTimer();
       document.getElementById('exam-timer').style.display = 'none';
       document.getElementById('progress-bar-wrap').style.display = 'none';
@@ -619,6 +709,7 @@ Gateway: blank</div>
       resultsHtml += '<div class="finish-row" style="margin-top:1.5rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take test again</button></div></div>';
       document.getElementById('results-container').innerHTML = resultsHtml;
       document.getElementById('results-container').style.display = 'block';
+      if (passed) setTimeout(launchConfetti, 600);
       document.getElementById('retake-btn').addEventListener('click', () => {
         document.getElementById('results-container').style.display = 'none';
         document.getElementById('results-container').innerHTML = '';

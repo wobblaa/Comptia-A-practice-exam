@@ -409,6 +409,8 @@
     .share-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
     .share-actions .file-input { display: none; }
 
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
     /* Footer */
     .builder-footer {
       text-align: center;
@@ -513,13 +515,102 @@
       validQuestions.forEach((q, index) => { const opts = q.options.filter(o => o.trim()); const block = document.createElement('div'); block.className = 'quiz-question'; block.innerHTML = `<h2>${index + 1}. ${escapeHtml(q.text)}</h2>${opts.map((opt, i) => `<button type="button" class="quiz-option" data-q="${index}" data-a="${i}">${escapeHtml(opt)}</button>`).join('')}`; quizQuestions.appendChild(block); });
       quizQuestions.querySelectorAll('.quiz-option').forEach(btn => { btn.addEventListener('click', () => { const qIndex = parseInt(btn.dataset.q, 10); const aIndex = parseInt(btn.dataset.a, 10); selectedAnswers[qIndex] = aIndex; btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }); });
     }
+    function launchConfetti() {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'confetti-canvas';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const pieces = [];
+      const colors = ['#7c5cff','#5ce1ff','#22c55e','#f59e0b','#ef4444','#ec4899','#a855f7','#14b8a6','#fbbf24'];
+      for (let i = 0; i < 400; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          w: Math.random() * 14 + 6,
+          h: Math.random() * 10 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vy: Math.random() * 6 + 4,
+          vx: (Math.random() - 0.5) * 6,
+          rot: Math.random() * 360,
+          rv: (Math.random() - 0.5) * 12
+        });
+      }
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+          p.vy += 0.08;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.max(0, 1 - frames / 180);
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 200) requestAnimationFrame(draw);
+        else canvas.remove();
+      }
+      draw();
+      setTimeout(() => {
+        const canvas2 = document.createElement('canvas');
+        canvas2.id = 'confetti-canvas-2';
+        canvas2.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+        document.body.appendChild(canvas2);
+        const ctx2 = canvas2.getContext('2d');
+        canvas2.width = window.innerWidth;
+        canvas2.height = window.innerHeight;
+        const pieces2 = [];
+        for (let i = 0; i < 200; i++) {
+          pieces2.push({
+            x: Math.random() * canvas2.width,
+            y: -20,
+            w: Math.random() * 12 + 4,
+            h: Math.random() * 8 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vy: Math.random() * 5 + 3,
+            vx: (Math.random() - 0.5) * 4,
+            rot: Math.random() * 360,
+            rv: (Math.random() - 0.5) * 10,
+            delay: Math.floor(Math.random() * 30)
+          });
+        }
+        let f = 0;
+        function draw2() {
+          ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+          pieces2.forEach(p => {
+            if (f > p.delay) {
+              p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+              p.vy += 0.06;
+              ctx2.save();
+              ctx2.translate(p.x, p.y);
+              ctx2.rotate(p.rot * Math.PI / 180);
+              ctx2.fillStyle = p.color;
+              ctx2.globalAlpha = Math.max(0, 1 - (f - p.delay) / 150);
+              ctx2.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+              ctx2.restore();
+            }
+          });
+          f++;
+          if (f < 180) requestAnimationFrame(draw2);
+          else canvas2.remove();
+        }
+        draw2();
+      }, 400);
+    }
     document.getElementById('finish-btn').addEventListener('click', () => {
       const validQuestions = questions.filter(q => q.text.trim() && q.options.filter(o => o.trim()).length >= 2);
       let correct = 0; const results = validQuestions.map((q, index) => { const opts = q.options.filter(o => o.trim()); const userChoice = selectedAnswers[index]; const isCorrect = userChoice === q.correctIndex; if (isCorrect) correct++; return { text: q.text, correct: isCorrect, userAnswer: userChoice !== undefined ? opts[userChoice] : '(not answered)', correctAnswer: opts[q.correctIndex] }; });
       const score = validQuestions.length ? Math.round((correct / validQuestions.length) * 100) : 0;
+      const passed = score >= 70;
       const resultsContainer = document.getElementById('results-container'); resultsContainer.style.display = 'block';
       resultsContainer.innerHTML = `<div class="results-card"><div class="score-big">${correct}/${validQuestions.length}</div><div class="score-label">${score}%</div>${results.map(r => `<div class="result-item"><span class="result-icon ${r.correct ? 'correct' : 'wrong'}">${r.correct ? '✓' : '✕'}</span><div class="result-text"><strong>${escapeHtml(r.text)}</strong><span>Your answer: ${escapeHtml(r.userAnswer)}${!r.correct ? ' — Correct: ' + escapeHtml(r.correctAnswer) : ''}</span></div></div>`).join('')}</div><div class="finish-row" style="margin-top:1rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take quiz again</button></div>`;
       document.getElementById('quiz-questions').style.display = 'none'; document.getElementById('finish-row').style.display = 'none'; document.getElementById('quiz-progress').textContent = 'Results';
+      if (passed) setTimeout(launchConfetti, 600);
       resultsContainer.querySelector('#retake-btn').addEventListener('click', () => { resultsContainer.style.display = 'none'; resultsContainer.innerHTML = ''; renderTake(); document.getElementById('quiz-questions').style.display = ''; });
     });
     loadQuizFromUrl(); renderBuild();

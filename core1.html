@@ -611,18 +611,18 @@ All other pins straight.</div>
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const pieces = [];
-      const colors = ['#7c5cff','#5ce1ff','#22c55e','#f59e0b','#ef4444','#ec4899'];
-      for (let i = 0; i < 150; i++) {
+      const colors = ['#7c5cff','#5ce1ff','#22c55e','#f59e0b','#ef4444','#ec4899','#a855f7','#14b8a6','#fbbf24'];
+      for (let i = 0; i < 400; i++) {
         pieces.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height - canvas.height,
-          w: Math.random() * 8 + 4,
-          h: Math.random() * 6 + 2,
+          w: Math.random() * 14 + 6,
+          h: Math.random() * 10 + 4,
           color: colors[Math.floor(Math.random() * colors.length)],
-          vy: Math.random() * 4 + 2,
-          vx: (Math.random() - 0.5) * 3,
+          vy: Math.random() * 6 + 4,
+          vx: (Math.random() - 0.5) * 6,
           rot: Math.random() * 360,
-          rv: (Math.random() - 0.5) * 8
+          rv: (Math.random() - 0.5) * 12
         });
       }
       let frames = 0;
@@ -630,20 +630,65 @@ All other pins straight.</div>
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         pieces.forEach(p => {
           p.x += p.vx; p.y += p.vy; p.rot += p.rv;
-          p.vy += 0.05;
+          p.vy += 0.08;
           ctx.save();
           ctx.translate(p.x, p.y);
           ctx.rotate(p.rot * Math.PI / 180);
           ctx.fillStyle = p.color;
-          ctx.globalAlpha = Math.max(0, 1 - frames / 120);
+          ctx.globalAlpha = Math.max(0, 1 - frames / 180);
           ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
           ctx.restore();
         });
         frames++;
-        if (frames < 140) requestAnimationFrame(draw);
+        if (frames < 200) requestAnimationFrame(draw);
         else canvas.remove();
       }
       draw();
+      setTimeout(() => {
+        const canvas2 = document.createElement('canvas');
+        canvas2.id = 'confetti-canvas-2';
+        canvas2.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+        document.body.appendChild(canvas2);
+        const ctx2 = canvas2.getContext('2d');
+        canvas2.width = window.innerWidth;
+        canvas2.height = window.innerHeight;
+        const pieces2 = [];
+        for (let i = 0; i < 200; i++) {
+          pieces2.push({
+            x: Math.random() * canvas2.width,
+            y: -20,
+            w: Math.random() * 12 + 4,
+            h: Math.random() * 8 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vy: Math.random() * 5 + 3,
+            vx: (Math.random() - 0.5) * 4,
+            rot: Math.random() * 360,
+            rv: (Math.random() - 0.5) * 10,
+            delay: Math.floor(Math.random() * 30)
+          });
+        }
+        let f = 0;
+        function draw2() {
+          ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+          pieces2.forEach(p => {
+            if (f > p.delay) {
+              p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+              p.vy += 0.06;
+              ctx2.save();
+              ctx2.translate(p.x, p.y);
+              ctx2.rotate(p.rot * Math.PI / 180);
+              ctx2.fillStyle = p.color;
+              ctx2.globalAlpha = Math.max(0, 1 - (f - p.delay) / 150);
+              ctx2.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+              ctx2.restore();
+            }
+          });
+          f++;
+          if (f < 180) requestAnimationFrame(draw2);
+          else canvas2.remove();
+        }
+        draw2();
+      }, 400);
     }
 
     function animateScore(el, target, duration) {
