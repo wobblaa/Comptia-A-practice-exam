@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CompTIA A+ Core 2</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -66,9 +67,15 @@
     .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,255,0.35); }
     .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; box-shadow: none; border: 1px solid var(--border); }
     .btn-ghost:hover { background: var(--surface-hover); color: var(--text); transform: none; box-shadow: none; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-top: 0; }
+    .result-filter-btn.active { background: rgba(124,92,255,0.15); color: var(--accent); border-color: var(--accent); }
     .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; text-align: center; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
     .results-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent)); }
     .score-big { font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 0.25rem; margin-top: 0.5rem; }
+    .score-big.pass-color { color: var(--correct); }
+    .score-big.fail-color { color: var(--wrong); }
+    .score-pass { color: var(--correct); font-weight: 600; font-size: 1.1rem; }
+    .score-fail { color: var(--wrong); font-weight: 600; font-size: 1.1rem; }
     .score-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
     .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); text-align: left; }
     .result-item:last-child { border-bottom: none; }
@@ -76,7 +83,13 @@
     .result-icon.correct { background: rgba(34, 197, 94, 0.2); color: var(--correct); }
     .result-icon.wrong { background: rgba(239, 68, 68, 0.2); color: var(--wrong); }
     .result-text strong { display: block; margin-bottom: 0.25rem; }
-    .result-text span { color: var(--text-muted); font-size: 0.9rem; }
+    .result-text span { color: var(--text); font-size: 0.9rem; }
+    .explanation-block { margin-top: 0.5rem; }
+    .explanation-toggle { background: none; border: none; color: var(--accent); font-size: 0.85rem; cursor: pointer; padding: 0.25rem 0; font-family: inherit; text-decoration: underline; text-underline-offset: 2px; }
+    .explanation-toggle:hover { color: var(--accent-hover); }
+    .result-explanation { margin-top: 0.5rem; padding: 0.6rem 0.75rem; background: rgba(124,92,255,0.08); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 0.88rem; color: var(--text); line-height: 1.5; }
+    .result-explanation ul, .result-explanation ol { margin: 0.4em 0; padding-left: 1.25em; }
+    .result-explanation li { margin: 0.2em 0; }
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
     #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
     @media (max-width: 600px) {
@@ -330,47 +343,47 @@ Gateway: blank</div>
   </div>
   <script>
     const questions = [
-      { text: "A Windows system boots to a black screen with a cursor after login. Safe Mode works. What is MOST likely the issue?", options: ["A. Corrupt boot sector", "B. Failing GPU", "C. Corrupt explorer shell or startup process", "D. BitLocker misconfiguration"], correctIndex: 2 },
+      { text: "A Windows system boots to a black screen with a cursor after login. Safe Mode works. What is MOST likely the issue?", options: ["A. Corrupt boot sector", "B. Failing GPU", "C. Corrupt explorer shell or startup process", "D. BitLocker misconfiguration"], correctIndex: 2, explanation: "Safe Mode loads minimal drivers and startup items. If it works, the boot sector and GPU are fine. A corrupt explorer.exe or startup process causes the black screen in normal mode." },
       { text: "Which TWO tools can be used to repair Windows boot configuration? (Choose TWO)", options: ["A. bootrec", "B. sfc", "C. bcdedit", "D. chkdsk"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
-      { text: "Which Windows edition supports joining an Active Directory domain?", options: ["A. Windows 11 Home", "B. Windows 11 Pro", "C. Windows 11 S Mode", "D. Windows 11 Education (standalone only)"], correctIndex: 1 },
-      { text: "A user cannot install applications due to \"Administrator approval required.\" UAC is enabled. What is the correct fix?", options: ["A. Disable UAC", "B. Add user to local Administrators group", "C. Run installer as Administrator", "D. Enable Secure Boot"], correctIndex: 2 },
-      { text: "Which attack type involves encrypting user files and demanding payment?", options: ["A. Worm", "B. Rootkit", "C. Ransomware", "D. Trojan"], correctIndex: 2 },
+      { text: "Which Windows edition supports joining an Active Directory domain?", options: ["A. Windows 11 Home", "B. Windows 11 Pro", "C. Windows 11 S Mode", "D. Windows 11 Education (standalone only)"], correctIndex: 1, explanation: "Windows Pro and above support domain join. Home and S Mode cannot join AD. Education can join if it's the Pro-based SKU." },
+      { text: "A user cannot install applications due to \"Administrator approval required.\" UAC is enabled. What is the correct fix?", options: ["A. Disable UAC", "B. Add user to local Administrators group", "C. Run installer as Administrator", "D. Enable Secure Boot"], correctIndex: 2, explanation: "Right-click the installer and choose Run as administrator to elevate for that task. Disabling UAC weakens security; adding to Admins gives full access; Secure Boot is unrelated." },
+      { text: "Which attack type involves encrypting user files and demanding payment?", options: ["A. Worm", "B. Rootkit", "C. Ransomware", "D. Trojan"], correctIndex: 2, explanation: "Ransomware encrypts user files and demands payment (usually in cryptocurrency) to restore access. Worms self-replicate; rootkits hide malware; trojans disguise as legitimate software." },
       { text: "Which THREE are examples of multifactor authentication? (Choose THREE)", options: ["A. Password", "B. Smart card", "C. Fingerprint", "D. PIN", "E. OTP token"], correctIndex: -1, multiSelect: true, correctValues: [1, 2, 4] },
-      { text: "Which Windows feature prevents unauthorized OS loaders from executing at boot?", options: ["A. BitLocker", "B. Secure Boot", "C. NTFS", "D. Windows Defender"], correctIndex: 1 },
-      { text: "A technician must securely erase an SSD before disposal. What method is MOST appropriate?", options: ["A. Format drive", "B. DBAN overwrite", "C. Manufacturer secure erase command", "D. Delete partitions"], correctIndex: 2 },
+      { text: "Which Windows feature prevents unauthorized OS loaders from executing at boot?", options: ["A. BitLocker", "B. Secure Boot", "C. NTFS", "D. Windows Defender"], correctIndex: 1, explanation: "Secure Boot verifies bootloader signatures against the UEFI database. Only signed code runs. BitLocker encrypts; NTFS is the file system; Defender is antivirus." },
+      { text: "A technician must securely erase an SSD before disposal. What method is MOST appropriate?", options: ["A. Format drive", "B. DBAN overwrite", "C. Manufacturer secure erase command", "D. Delete partitions"], correctIndex: 2, explanation: "SSDs use wear leveling—overwriting doesn't reach all blocks. Manufacturer secure erase (ATA Secure Erase) resets all cells. DBAN is for HDDs; format/delete don't securely wipe." },
       { text: "A Windows system repeatedly fails to apply updates with error 0x800f0922. What should be checked FIRST?", options: ["A. Network connectivity", "B. Reserved system partition size", "C. GPU driver version", "D. BitLocker key"], correctIndex: 1 },
-      { text: "Which of the following BEST describes least privilege?", options: ["A. Users receive admin rights by default", "B. Users only receive permissions necessary for tasks", "C. Disable all local accounts", "D. Enforce strong passwords"], correctIndex: 1 },
+      { text: "Which of the following BEST describes least privilege?", options: ["A. Users receive admin rights by default", "B. Users only receive permissions necessary for tasks", "C. Disable all local accounts", "D. Enforce strong passwords"], correctIndex: 1, explanation: "Least privilege means users get only the minimum access needed. This limits damage from compromise or mistakes. Strong passwords and disabling accounts are separate controls." },
       { text: "A Windows system fails to boot with \"Operating System not found.\" BIOS detects the drive. Boot order is correct. The disk uses GPT and the system was previously UEFI. What is MOST likely misconfigured?", options: ["A. Secure Boot disabled", "B. CSM/Legacy mode enabled", "C. BitLocker recovery key missing", "D. NTFS permissions"], correctIndex: 1 },
       { text: "Which TWO commands verify integrity of Windows system files? (Choose TWO)", options: ["A. sfc /scannow", "B. chkdsk /f", "C. DISM /restorehealth", "D. bootrec /fixmbr"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
-      { text: "A user reports extremely slow login times on a domain-joined PC. Local login is fast. What is MOST likely the issue?", options: ["A. DNS misconfiguration", "B. Corrupt profile", "C. Failing SSD", "D. Incorrect time zone"], correctIndex: 0 },
-      { text: "Which Windows feature isolates applications in lightweight containers to prevent system compromise?", options: ["A. Hyper-V", "B. Sandbox", "C. BitLocker", "D. NTFS"], correctIndex: 1 },
-      { text: "A technician suspects a rootkit. Which environment is BEST for removal?", options: ["A. Normal Windows session", "B. Safe Mode", "C. Offline bootable antivirus environment", "D. Recovery Console only"], correctIndex: 2 },
-      { text: "A user's system is infected with spyware that logs keystrokes. What type of malware is this?", options: ["A. Worm", "B. Keylogger", "C. Logic bomb", "D. Backdoor"], correctIndex: 1 },
+      { text: "A user reports extremely slow login times on a domain-joined PC. Local login is fast. What is MOST likely the issue?", options: ["A. DNS misconfiguration", "B. Corrupt profile", "C. Failing SSD", "D. Incorrect time zone"], correctIndex: 0, explanation: "Domain login requires finding the domain controller via DNS. Wrong DNS or missing DC records causes timeouts and slow logins. Local login skips this." },
+      { text: "Which Windows feature isolates applications in lightweight containers to prevent system compromise?", options: ["A. Hyper-V", "B. Sandbox", "C. BitLocker", "D. NTFS"], correctIndex: 1, explanation: "Windows Sandbox runs apps in a disposable, isolated environment. Hyper-V is full virtualization; BitLocker encrypts; NTFS is the file system." },
+      { text: "A technician suspects a rootkit. Which environment is BEST for removal?", options: ["A. Normal Windows session", "B. Safe Mode", "C. Offline bootable antivirus environment", "D. Recovery Console only"], correctIndex: 2, explanation: "Rootkits hide in the OS. Booting from external media (e.g., Kaspersky Rescue Disk) scans the drive without loading the infected OS, so the rootkit can't hide." },
+      { text: "A user's system is infected with spyware that logs keystrokes. What type of malware is this?", options: ["A. Worm", "B. Keylogger", "C. Logic bomb", "D. Backdoor"], correctIndex: 1, explanation: "A keylogger captures keystrokes to steal passwords and other input. Worms self-replicate; logic bombs trigger on conditions; backdoors allow remote access." },
       { text: "Which TWO are valid encryption methods for Wi-Fi? (Choose TWO)", options: ["A. TKIP", "B. AES", "C. WPA3", "D. WEP"], correctIndex: -1, multiSelect: true, correctValues: [1, 2] },
-      { text: "Which Windows tool displays startup programs and allows disabling them?", options: ["A. services.msc", "B. msconfig", "C. taskmgr", "D. eventvwr"], correctIndex: 2 },
-      { text: "A user cannot access a shared folder. NTFS permissions allow access. Share permissions are set to Read. User needs Write. What is required?", options: ["A. Modify NTFS", "B. Modify Share permissions", "C. Disable inheritance", "D. Enable Offline Files"], correctIndex: 1 },
-      { text: "Which log in Event Viewer would MOST likely show driver initialization failures?", options: ["A. Security", "B. Application", "C. System", "D. Setup"], correctIndex: 2 },
-      { text: "Which method BEST prevents shoulder surfing attacks?", options: ["A. Account lockout", "B. Privacy screen filter", "C. Disable USB", "D. TPM"], correctIndex: 1 },
-      { text: "Which tool configures local security policy settings?", options: ["A. secpol.msc", "B. gpupdate", "C. lusrmgr.msc", "D. services.msc"], correctIndex: 0 },
-      { text: "Which Linux command changes file permissions?", options: ["A. chown", "B. chmod", "C. ls", "D. grep"], correctIndex: 1 },
-      { text: "A Windows 11 system cannot enable BitLocker. TPM 2.0 is present but disabled. What must be done?", options: ["A. Update BIOS", "B. Enable TPM in firmware", "C. Convert MBR to GPT", "D. Disable Secure Boot"], correctIndex: 1 },
+      { text: "Which Windows tool displays startup programs and allows disabling them?", options: ["A. services.msc", "B. msconfig", "C. taskmgr", "D. eventvwr"], correctIndex: 2, explanation: "Task Manager's Startup tab lists programs that run at login and lets you enable/disable them. services.msc manages services; msconfig is legacy; eventvwr shows logs." },
+      { text: "A user cannot access a shared folder. NTFS permissions allow access. Share permissions are set to Read. User needs Write. What is required?", options: ["A. Modify NTFS", "B. Modify Share permissions", "C. Disable inheritance", "D. Enable Offline Files"], correctIndex: 1, explanation: "Share and NTFS permissions combine—the most restrictive wins. NTFS allows Write but Share is Read-only, so Share blocks Write. Change Share to Change or Full Control." },
+      { text: "Which log in Event Viewer would MOST likely show driver initialization failures?", options: ["A. Security", "B. Application", "C. System", "D. Setup"], correctIndex: 2, explanation: "The System log records kernel and driver events, including driver load failures. Security logs auth; Application logs app events; Setup logs installation." },
+      { text: "Which method BEST prevents shoulder surfing attacks?", options: ["A. Account lockout", "B. Privacy screen filter", "C. Disable USB", "D. TPM"], correctIndex: 1, explanation: "Privacy filters narrow the viewing angle so only the user directly in front can see the screen. Lockout stops brute force; USB and TPM don't address visual eavesdropping." },
+      { text: "Which tool configures local security policy settings?", options: ["A. secpol.msc", "B. gpupdate", "C. lusrmgr.msc", "D. services.msc"], correctIndex: 0, explanation: "secpol.msc opens Local Security Policy (password, lockout, audit, etc.). gpupdate applies Group Policy; lusrmgr manages users; services.msc manages services." },
+      { text: "Which Linux command changes file permissions?", options: ["A. chown", "B. chmod", "C. ls", "D. grep"], correctIndex: 1, explanation: "chmod sets read/write/execute (rwx) permissions. chown changes owner; ls lists files; grep searches text." },
+      { text: "A Windows 11 system cannot enable BitLocker. TPM 2.0 is present but disabled. What must be done?", options: ["A. Update BIOS", "B. Enable TPM in firmware", "C. Convert MBR to GPT", "D. Disable Secure Boot"], correctIndex: 1, explanation: "BitLocker needs TPM for key storage. If TPM is disabled in BIOS/UEFI, enable it there. MBR/GPT and Secure Boot are separate from TPM enablement." },
       { text: "Which are examples of social engineering attacks? (Select all that apply)", options: ["A. Phishing", "B. Shoulder surfing", "C. DDoS", "D. Tailgating", "E. Vishing"], correctIndex: -1, multiSelect: true, correctValues: [0, 1, 3, 4] },
-      { text: "A Windows device frequently displays \"Driver Power State Failure.\" What is MOST likely?", options: ["A. Corrupt registry", "B. Incompatible driver", "C. Failing CPU", "D. Corrupt bootloader"], correctIndex: 1 },
-      { text: "Which Windows tool is used to configure advanced firewall rules?", options: ["A. wf.msc", "B. firewall.cpl", "C. secpol.msc", "D. gpresult"], correctIndex: 0 },
+      { text: "A Windows device frequently displays \"Driver Power State Failure.\" What is MOST likely?", options: ["A. Corrupt registry", "B. Incompatible driver", "C. Failing CPU", "D. Corrupt bootloader"], correctIndex: 1, explanation: "This BSOD often means a driver mishandles power state transitions (sleep/wake). Update or roll back the driver, especially GPU, chipset, or storage drivers." },
+      { text: "Which Windows tool is used to configure advanced firewall rules?", options: ["A. wf.msc", "B. firewall.cpl", "C. secpol.msc", "D. gpresult"], correctIndex: 0, explanation: "wf.msc opens Windows Defender Firewall with Advanced Security (inbound/outbound rules, profiles). firewall.cpl is basic; secpol is security policy; gpresult shows applied GPOs." },
       { text: "A technician must verify open TCP ports on a local machine. Which command?", options: ["A. netstat -an", "B. ping", "C. ipconfig", "D. tracert"], correctIndex: 0 },
-      { text: "Which attack attempts to overwhelm a system by exhausting resources?", options: ["A. MITM", "B. DDoS", "C. SQL injection", "D. XSS"], correctIndex: 1 },
-      { text: "Which partition style supports drives larger than 2TB?", options: ["A. MBR", "B. GPT", "C. FAT32", "D. exFAT"], correctIndex: 1 },
-      { text: "Which Windows edition supports BitLocker?", options: ["A. Home", "B. Pro", "C. Starter", "D. S Mode"], correctIndex: 1 },
+      { text: "Which attack attempts to overwhelm a system by exhausting resources?", options: ["A. MITM", "B. DDoS", "C. SQL injection", "D. XSS"], correctIndex: 1, explanation: "DDoS (Distributed Denial of Service) floods a target with traffic to exhaust bandwidth, CPU, or memory. MITM intercepts; SQL injection and XSS exploit app vulnerabilities." },
+      { text: "Which partition style supports drives larger than 2TB?", options: ["A. MBR", "B. GPT", "C. FAT32", "D. exFAT"], correctIndex: 1, explanation: "GPT (GUID Partition Table) supports drives over 2TB and more partitions. MBR is limited to 2TB. FAT32 and exFAT are file systems, not partition styles." },
+      { text: "Which Windows edition supports BitLocker?", options: ["A. Home", "B. Pro", "C. Starter", "D. S Mode"], correctIndex: 1, explanation: "BitLocker requires Pro, Enterprise, or Education. Home and S Mode don't include it. Starter was an older low-end SKU." },
       { text: "A user reports constant UAC prompts for standard tasks. What is MOST likely misconfigured?", options: ["A. UAC level set too high", "B. User in Guests group", "C. Corrupt OS", "D. Secure Boot disabled"], correctIndex: 0 },
-      { text: "Which protocol encrypts remote management traffic?", options: ["A. Telnet", "B. FTP", "C. SSH", "D. SNMPv1"], correctIndex: 2 },
+      { text: "Which protocol encrypts remote management traffic?", options: ["A. Telnet", "B. FTP", "C. SSH", "D. SNMPv1"], correctIndex: 2, explanation: "SSH (Secure Shell) encrypts remote management traffic. Telnet and FTP send data in plaintext. SNMPv1 has no encryption." },
       { text: "Which Windows feature allows rolling back to previous driver version?", options: ["A. Device Manager rollback", "B. chkdsk", "C. DISM", "D. msconfig"], correctIndex: 0 },
       { text: "A laptop repeatedly locks accounts after failed login attempts. What policy is responsible?", options: ["A. Password complexity", "B. Account lockout threshold", "C. Audit policy", "D. Secure Boot"], correctIndex: 1 },
       { text: "Which macOS utility verifies disk integrity?", options: ["A. Activity Monitor", "B. Disk Utility", "C. Finder", "D. Keychain"], correctIndex: 1 },
-      { text: "Which best describes a zero-day vulnerability?", options: ["A. Known vulnerability patched", "B. Exploit unknown to vendor", "C. Malware signature detected", "D. Expired certificate"], correctIndex: 1 },
+      { text: "Which best describes a zero-day vulnerability?", options: ["A. Known vulnerability patched", "B. Exploit unknown to vendor", "C. Malware signature detected", "D. Expired certificate"], correctIndex: 1, explanation: "A zero-day is a vulnerability the vendor is unaware of, giving them zero days to patch before exploitation. There is no patch available yet." },
       { text: "A Windows machine cannot reach internal resources after IP change. Which should be flushed?", options: ["A. ARP cache", "B. DNS cache", "C. BIOS", "D. CMOS"], correctIndex: 1 },
-      { text: "Which type of backup copies only files changed since last full backup?", options: ["A. Incremental", "B. Differential", "C. Full", "D. Synthetic"], correctIndex: 0 },
-      { text: "Which command updates Group Policy immediately?", options: ["A. gpresult", "B. gpupdate /force", "C. secpol", "D. net use"], correctIndex: 1 },
-      { text: "A user's system is infected with ransomware. After isolation, what is the MOST appropriate recovery method?", options: ["A. Run sfc", "B. Restore from clean backup", "C. Disable firewall", "D. Delete registry entries"], correctIndex: 1 },
+      { text: "Which type of backup copies only files changed since last full backup?", options: ["A. Incremental", "B. Differential", "C. Full", "D. Synthetic"], correctIndex: 0, explanation: "Incremental backs up only changes since the last backup (full or incremental). Differential backs up since last full. Full copies everything. Restoring incremental needs the full plus all incrementals." },
+      { text: "Which command updates Group Policy immediately?", options: ["A. gpresult", "B. gpupdate /force", "C. secpol", "D. net use"], correctIndex: 1, explanation: "gpupdate /force refreshes Group Policy without waiting for the next refresh cycle. gpresult shows applied policies; secpol edits local security; net use maps drives." },
+      { text: "A user's system is infected with ransomware. After isolation, what is the MOST appropriate recovery method?", options: ["A. Run sfc", "B. Restore from clean backup", "C. Disable firewall", "D. Delete registry entries"], correctIndex: 1, explanation: "Restore from a backup made before infection. Don't pay the ransom if avoidable. sfc fixes system files but not encrypted data; disabling firewall or editing registry won't recover files." },
       { text: "Which TWO actions reduce attack surface on a Windows workstation? (Choose TWO)", options: ["A. Disable unused services", "B. Install more RAM", "C. Remove unnecessary software", "D. Increase page file size"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
       { text: "A Windows system crashes with IRQL_NOT_LESS_OR_EQUAL. What is MOST likely the cause?", options: ["A. Corrupt user profile", "B. Faulty driver or memory", "C. DNS issue", "D. BitLocker key mismatch"], correctIndex: 1 },
       { text: "Which Windows feature allows restricting USB storage devices via policy?", options: ["A. NTFS", "B. Group Policy", "C. BitLocker", "D. Event Viewer"], correctIndex: 1 },
@@ -378,7 +391,7 @@ Gateway: blank</div>
       { text: "Which Linux command displays running processes?", options: ["A. ps", "B. chmod", "C. grep", "D. nano"], correctIndex: 0 },
       { text: "Which TWO are characteristics of worms? (Choose TWO)", options: ["A. Require user interaction", "B. Self-replicating", "C. Spread over networks", "D. Encrypt files"], correctIndex: -1, multiSelect: true, correctValues: [1, 2] },
       { text: "A Windows PC cannot join a domain. Time is off by 7 minutes. What is MOST likely preventing the join?", options: ["A. DNS", "B. Kerberos time skew", "C. Firewall rule", "D. NTFS permissions"], correctIndex: 1 },
-      { text: "Which encryption protects data at rest on Windows laptops?", options: ["A. TLS", "B. SSH", "C. BitLocker", "D. IPSec"], correctIndex: 2 },
+      { text: "Which encryption protects data at rest on Windows laptops?", options: ["A. TLS", "B. SSH", "C. BitLocker", "D. IPSec"], correctIndex: 2, explanation: "BitLocker encrypts entire drives (data at rest). TLS and SSH protect data in transit; IPSec can do both but is typically used for network traffic." },
       { text: "Which tool shows which program is using a specific TCP port?", options: ["A. ipconfig", "B. netstat -ano", "C. ping", "D. taskkill"], correctIndex: 1 },
       { text: "A technician needs to reset a forgotten local Windows password without domain access. What environment is required?", options: ["A. BIOS", "B. Windows Recovery Environment", "C. Event Viewer", "D. Device Manager"], correctIndex: 1 },
       { text: "Which TWO Windows features support virtualization? (Choose TWO)", options: ["A. Hyper-V", "B. BitLocker", "C. Windows Sandbox", "D. NTFS compression"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
@@ -387,9 +400,9 @@ Gateway: blank</div>
       { text: "Which policy enforces password complexity requirements?", options: ["A. Account lockout", "B. Audit policy", "C. Password policy", "D. UAC"], correctIndex: 2 },
       { text: "A system displays \"BOOTMGR is missing.\" What should be repaired?", options: ["A. MBR or BCD", "B. DNS cache", "C. GPU driver", "D. NTFS ACL"], correctIndex: 0 },
       { text: "Which TWO are examples of physical security controls? (Choose TWO)", options: ["A. Biometric scanner", "B. Firewall", "C. Locked server rack", "D. IDS"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
-      { text: "Which protocol encrypts web traffic?", options: ["A. FTP", "B. HTTP", "C. HTTPS", "D. Telnet"], correctIndex: 2 },
+      { text: "Which protocol encrypts web traffic?", options: ["A. FTP", "B. HTTP", "C. HTTPS", "D. Telnet"], correctIndex: 2, explanation: "HTTPS uses TLS/SSL to encrypt HTTP traffic. FTP, HTTP, and Telnet send data in plaintext." },
       { text: "A technician needs to analyze system crashes. Which file type is required?", options: ["A. .evt", "B. .dmp", "C. .sys", "D. .ini"], correctIndex: 1 },
-      { text: "Which attack relies on tricking users into clicking malicious links?", options: ["A. Phishing", "B. Rootkit", "C. Logic bomb", "D. Backdoor"], correctIndex: 0 },
+      { text: "Which attack relies on tricking users into clicking malicious links?", options: ["A. Phishing", "B. Rootkit", "C. Logic bomb", "D. Backdoor"], correctIndex: 0, explanation: "Phishing uses fake emails or sites to trick users into revealing credentials or installing malware. Rootkits hide; logic bombs trigger on conditions; backdoors allow remote access." },
       { text: "Which Windows feature prevents unauthorized code from executing?", options: ["A. Secure Boot", "B. AppLocker", "C. NTFS", "D. SMB"], correctIndex: 1 },
       { text: "A technician must ensure only specific apps can run on a workstation. What should be configured?", options: ["A. Firewall rules", "B. AppLocker", "C. BitLocker", "D. Event logging"], correctIndex: 1 },
       { text: "Which THREE are examples of data destruction methods? (Choose THREE)", options: ["A. Shredding", "B. Degaussing", "C. Formatting", "D. Drive wiping", "E. Pulverizing"], correctIndex: -1, multiSelect: true, correctValues: [0, 1, 4] },
@@ -413,7 +426,7 @@ Gateway: blank</div>
       { text: "A user receives certificate warnings for all websites. What is MOST likely?", options: ["A. DNS failure", "B. Incorrect system date/time", "C. Corrupt SSD", "D. Firewall misconfiguration"], correctIndex: 1 },
       { text: "Which TWO are required for BitLocker to function securely? (Choose TWO)", options: ["A. TPM", "B. NTFS", "C. Secure Boot", "D. FAT32"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
       { text: "Which Windows mode loads minimal drivers and services?", options: ["A. Recovery", "B. Safe Mode", "C. Audit Mode", "D. Kiosk Mode"], correctIndex: 1 },
-      { text: "Which file system supports file-level permissions in Windows?", options: ["A. FAT32", "B. exFAT", "C. NTFS", "D. ReFS only"], correctIndex: 2 },
+      { text: "Which file system supports file-level permissions in Windows?", options: ["A. FAT32", "B. exFAT", "C. NTFS", "D. ReFS only"], correctIndex: 2, explanation: "NTFS supports ACLs (Access Control Lists) for file/folder permissions. FAT32 and exFAT don't. ReFS has some support but NTFS is the standard for permissions." },
       { text: "Which principle ensures systems remain functional during hardware failure?", options: ["A. Confidentiality", "B. Integrity", "C. Availability", "D. Non-repudiation"], correctIndex: 2 }
     ];
     const PBQ_COUNT = 5;
@@ -430,6 +443,33 @@ Gateway: blank</div>
     let matchAssignments = {};
     let draggedChip = null;
     function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    function formatExplanation(str) {
+      if (!str) return '';
+      const escaped = escapeHtml(str);
+      const lines = escaped.split(/\r?\n/);
+      const out = [];
+      let inList = false;
+      let listType = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const bulletMatch = line.match(/^[\s]*([•\-*▪◦–])\s+(.*)$/) || line.match(/^[\s]*([•\-*])\s*$/);
+        const numMatch = line.match(/^[\s]*(\d+)[.)]\s+(.*)$/);
+        if (bulletMatch) {
+          const content = (bulletMatch[2] || '').trim();
+          if (!inList || listType !== 'ul') { if (inList) out.push(listType === 'ol' ? '</ol>' : '</ul>'); out.push('<ul>'); inList = true; listType = 'ul'; }
+          out.push('<li>' + content + '</li>');
+        } else if (numMatch) {
+          const content = numMatch[2].trim();
+          if (!inList || listType !== 'ol') { if (inList) out.push(listType === 'ul' ? '</ul>' : '</ol>'); out.push('<ol>'); inList = true; listType = 'ol'; }
+          out.push('<li>' + content + '</li>');
+        } else {
+          if (inList) { out.push(listType === 'ul' ? '</ul>' : '</ol>'); inList = false; listType = null; }
+          if (line.trim()) out.push('<p style="margin:0.35em 0">' + line + '</p>');
+        }
+      }
+      if (inList) out.push(listType === 'ul' ? '</ul>' : '</ol>');
+      return out.join('').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
     let selectedAnswers = {};
     function formatTime(sec) { const m = Math.floor(sec / 60); const s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
     function startTimer() {
@@ -623,10 +663,13 @@ Gateway: blank</div>
     chipsPool.addEventListener('drop', e => { e.preventDefault(); if (draggedChip && draggedChip.parentElement && draggedChip.parentElement.classList.contains('drop-zone')) returnChipToPool(draggedChip); });
     ['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].forEach(id => { document.getElementById(id).addEventListener('change', function() { if (['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].filter(i => document.getElementById(i).checked).length > 2) this.checked = false; updateProgressBar(); }); });
     document.querySelectorAll('#pbq-section select').forEach(sel => { sel.addEventListener('change', updateProgressBar); });
+    function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+    let displayOrder = [];
     function renderTake() {
       const quizQuestions = document.getElementById('quiz-questions');
       const progress = document.getElementById('quiz-progress');
       const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
+      displayOrder = shuffle(validQuestions);
       const totalQuestions = PBQ_COUNT + validQuestions.length;
       document.getElementById('exam-timer').style.display = 'flex';
       document.getElementById('progress-bar-wrap').style.display = 'block';
@@ -638,7 +681,7 @@ Gateway: blank</div>
       progress.textContent = totalQuestions > 0 ? ('Questions 1–' + totalQuestions + ' (' + PBQ_COUNT + ' PBQs' + (validQuestions.length ? ' + ' + validQuestions.length + ' multiple choice' : '') + ') • 90 min') : (PBQ_COUNT + ' PBQs • 90 min');
       document.getElementById('mc-section-label').style.display = validQuestions.length > 0 ? 'block' : 'none';
       quizQuestions.innerHTML = '';
-      validQuestions.forEach((q, index) => {
+      displayOrder.forEach((q, index) => {
         const opts = q.options.filter(o => o && o.trim());
         const block = document.createElement('div');
         block.className = 'quiz-question';
@@ -671,7 +714,7 @@ Gateway: blank</div>
       const pbqFeedback = getPbqFeedback();
       const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
       let mcScore = 0;
-      const mcResults = validQuestions.map((q, index) => {
+      const mcResults = displayOrder.map((q, index) => {
         const opts = q.options.filter(o => o && o.trim());
         const userChoice = selectedAnswers[index];
         let isCorrect, userAnswer, correctAnswer;
@@ -687,7 +730,7 @@ Gateway: blank</div>
           correctAnswer = opts[q.correctIndex];
         }
         if (isCorrect) mcScore++;
-        return { text: q.text, correct: isCorrect, userAnswer: userAnswer, correctAnswer: correctAnswer };
+        return { text: q.text, correct: isCorrect, userAnswer: userAnswer, correctAnswer: correctAnswer, explanation: q.explanation };
       });
       const total = PBQ_COUNT + validQuestions.length;
       const totalCorrect = pbqScore + mcScore;
@@ -703,12 +746,23 @@ Gateway: blank</div>
       document.getElementById('mc-section-label').style.display = 'none';
       document.getElementById('quiz-progress').textContent = 'Results';
       document.getElementById('progress-bar').style.width = '100%';
-      let resultsHtml = '<div class="results-card"><div class="score-big">' + totalCorrect + ' / ' + total + '</div><div class="score-label">' + pct + '%</div>';
+      let resultsHtml = '<div class="results-card"><div class="score-big ' + (passed ? 'pass-color' : 'fail-color') + '">' + totalCorrect + ' / ' + total + '</div><div class="score-label ' + (passed ? 'score-pass' : 'score-fail') + '">' + (passed ? '&#10003; Pass' : '&#10007; Fail') + ' (passing: 700/900)</div><div class="score-label" style="margin-top:0.25rem">' + scaledScore + ' / 900 &bull; ' + pct + '%</div>';
       resultsHtml += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1rem">' + pbqFeedback.map(f => '<span style="padding:0.3rem 0.7rem;border-radius:6px;font-size:0.8rem;font-weight:600;background:' + (f.ok ? 'rgba(34,197,94,0.15);color:#22c55e' : 'rgba(239,68,68,0.15);color:#ef4444') + '">PBQ ' + f.n + ' ' + (f.ok ? '✓' : '✕') + '</span>').join('') + '</div>';
-      resultsHtml += mcResults.map(r => '<div class="result-item"><span class="result-icon ' + (r.correct ? 'correct' : 'wrong') + '">' + (r.correct ? '✓' : '✕') + '</span><div class="result-text"><strong>' + escapeHtml(r.text) + '</strong><span>Your answer: ' + escapeHtml(r.userAnswer) + (r.correct ? '' : ' — Correct: ' + escapeHtml(r.correctAnswer)) + '</span></div></div>').join('');
+      resultsHtml += '<div class="result-filter" style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm result-filter-btn active" data-filter="all">All</button><button type="button" class="btn btn-ghost btn-sm result-filter-btn" data-filter="wrong">Wrong only</button></div>';
+      resultsHtml += '<div id="result-items">' + mcResults.map(r => '<div class="result-item ' + (r.correct ? 'result-correct' : 'result-wrong') + '"><span class="result-icon ' + (r.correct ? 'correct' : 'wrong') + '">' + (r.correct ? '✓' : '✕') + '</span><div class="result-text"><strong>' + escapeHtml(r.text) + '</strong><span>Your answer: ' + escapeHtml(r.userAnswer) + (r.correct ? '' : ' — Correct: ' + escapeHtml(r.correctAnswer)) + '</span>' + (r.explanation ? '<div class="explanation-block"><button type="button" class="explanation-toggle">Show explanation</button><div class="result-explanation" style="display:none">' + formatExplanation(r.explanation) + '</div></div>' : '') + '</div></div>').join('') + '</div>';
       resultsHtml += '<div class="finish-row" style="margin-top:1.5rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take test again</button></div></div>';
       document.getElementById('results-container').innerHTML = resultsHtml;
       document.getElementById('results-container').style.display = 'block';
+      document.querySelectorAll('.result-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.result-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.dataset.filter;
+          document.querySelectorAll('#result-items .result-item').forEach(el => {
+            el.style.display = filter === 'wrong' && el.classList.contains('result-correct') ? 'none' : '';
+          });
+        });
+      });
       if (passed) setTimeout(launchConfetti, 600);
       document.getElementById('retake-btn').addEventListener('click', () => {
         document.getElementById('results-container').style.display = 'none';
@@ -752,6 +806,15 @@ Gateway: blank</div>
       chipsPool.querySelectorAll('.draggable-chip').forEach(makeChipDraggable);
     }
     renderTake();
+    document.getElementById('results-container').addEventListener('click', (e) => {
+      if (e.target.classList.contains('explanation-toggle')) {
+        const block = e.target.closest('.explanation-block');
+        const explanation = block.querySelector('.result-explanation');
+        const isHidden = explanation.style.display === 'none';
+        explanation.style.display = isHidden ? 'block' : 'none';
+        e.target.textContent = isHidden ? 'Hide explanation' : 'Show explanation';
+      }
+    });
   </script>
 </body>
 </html>

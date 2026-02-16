@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Builder & Grader</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -187,6 +188,7 @@
       box-shadow: 0 4px 20px rgba(124,92,255,0.08);
     }
     .question-card h3 { font-size: 0.8rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .question-card .q-explanation { margin-top: 0.75rem; min-height: 2.5rem; font-size: 0.88rem; }
 
     input[type="text"], textarea {
       width: 100%;
@@ -236,6 +238,8 @@
       color: var(--text-muted);
       border: 1px solid var(--border);
     }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-top: 0; }
+    .result-filter-btn.active { background: rgba(124,92,255,0.15); color: var(--accent); border-color: var(--accent); }
     .btn-ghost:hover {
       background: var(--surface-hover);
       color: var(--text);
@@ -375,7 +379,13 @@
     .result-icon.wrong { background: rgba(239, 68, 68, 0.15); color: var(--wrong); }
     .result-text { flex: 1; }
     .result-text strong { display: block; margin-bottom: 0.25rem; }
-    .result-text span { color: var(--text-muted); font-size: 0.9rem; }
+    .result-text span { color: var(--text); font-size: 0.9rem; }
+    .explanation-block { margin-top: 0.5rem; }
+    .explanation-toggle { background: none; border: none; color: var(--accent); font-size: 0.85rem; cursor: pointer; padding: 0.25rem 0; font-family: inherit; text-decoration: underline; text-underline-offset: 2px; }
+    .explanation-toggle:hover { color: var(--accent-hover); }
+    .result-explanation { margin-top: 0.5rem; padding: 0.6rem 0.75rem; background: rgba(124,92,255,0.08); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 0.88rem; color: var(--text); line-height: 1.5; }
+    .result-explanation ul, .result-explanation ol { margin: 0.4em 0; padding-left: 1.25em; }
+    .result-explanation li { margin: 0.2em 0; }
 
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
     .empty-state p { margin-bottom: 1rem; }
@@ -495,24 +505,54 @@
     document.getElementById('load-file-btn').addEventListener('click', () => document.getElementById('quiz-file-input').click());
     document.getElementById('quiz-file-input').addEventListener('change', (e) => { const file = e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const loaded = JSON.parse(reader.result); if (Array.isArray(loaded) && loaded.length > 0) { questions = loaded; save(); renderBuild(); alert('Quiz loaded.'); } else alert('File does not contain a valid quiz.'); } catch (err) { alert('Could not read file.'); } e.target.value = ''; }; reader.readAsText(file); });
     function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    function formatExplanation(str) {
+      if (!str) return '';
+      const escaped = escapeHtml(str);
+      const lines = escaped.split(/\r?\n/);
+      const out = [];
+      let inList = false;
+      let listType = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const bulletMatch = line.match(/^[\s]*([•\-*▪◦–])\s+(.*)$/) || line.match(/^[\s]*([•\-*])\s*$/);
+        const numMatch = line.match(/^[\s]*(\d+)[.)]\s+(.*)$/);
+        if (bulletMatch) {
+          const content = (bulletMatch[2] || '').trim();
+          if (!inList || listType !== 'ul') { if (inList) out.push(listType === 'ol' ? '</ol>' : '</ul>'); out.push('<ul>'); inList = true; listType = 'ul'; }
+          out.push('<li>' + content + '</li>');
+        } else if (numMatch) {
+          const content = numMatch[2].trim();
+          if (!inList || listType !== 'ol') { if (inList) out.push(listType === 'ul' ? '</ul>' : '</ol>'); out.push('<ol>'); inList = true; listType = 'ol'; }
+          out.push('<li>' + content + '</li>');
+        } else {
+          if (inList) { out.push(listType === 'ul' ? '</ul>' : '</ol>'); inList = false; listType = null; }
+          if (line.trim()) out.push('<p style="margin:0.35em 0">' + line + '</p>');
+        }
+      }
+      if (inList) out.push(listType === 'ul' ? '</ul>' : '</ol>');
+      return out.join('').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
     function renderBuild() {
       const container = document.getElementById('questions-container'); container.innerHTML = '';
-      questions.forEach((q, index) => { const opts = [...(q.options || []), '', '', ''].slice(0, 4); if (opts.length < 4) opts.push(...Array(4 - opts.length).fill('')); const card = document.createElement('div'); card.className = 'question-card'; card.dataset.index = index; card.innerHTML = `<h3>Question ${index + 1}</h3><textarea placeholder="Question text" class="q-text">${escapeHtml(q.text)}</textarea><div class="options-list">${opts.map((opt, i) => `<div class="option-row"><input type="radio" name="correct-${index}" ${i === q.correctIndex ? 'checked' : ''} value="${i}"><input type="text" class="opt-text" placeholder="${'ABCD'[i]})" value="${escapeHtml(opt)}"></div>`).join('')}</div><div class="card-actions"><button type="button" class="btn btn-danger btn-remove">Remove</button></div>`; container.appendChild(card); });
-      container.querySelectorAll('.question-card').forEach(card => { const index = parseInt(card.dataset.index, 10); const textarea = card.querySelector('.q-text'); const optInputs = card.querySelectorAll('.opt-text'); const radioInputs = card.querySelectorAll('input[type="radio"]'); if (!questions[index].options) questions[index].options = []; while (questions[index].options.length < 4) questions[index].options.push(''); textarea.addEventListener('change', () => { questions[index].text = textarea.value.trim(); save(); }); optInputs.forEach((input, i) => { input.addEventListener('change', () => { questions[index].options[i] = input.value.trim(); save(); }); }); radioInputs.forEach((radio, i) => { radio.addEventListener('change', () => { if (radio.checked) questions[index].correctIndex = i; save(); }); }); card.querySelector('.btn-remove').addEventListener('click', () => { questions.splice(index, 1); save(); renderBuild(); }); });
+      questions.forEach((q, index) => { const opts = [...(q.options || []), '', '', ''].slice(0, 4); if (opts.length < 4) opts.push(...Array(4 - opts.length).fill('')); const card = document.createElement('div'); card.className = 'question-card'; card.dataset.index = index; card.innerHTML = `<h3>Question ${index + 1}</h3><textarea placeholder="Question text" class="q-text">${escapeHtml(q.text)}</textarea><div class="options-list">${opts.map((opt, i) => `<div class="option-row"><input type="radio" name="correct-${index}" ${i === q.correctIndex ? 'checked' : ''} value="${i}"><input type="text" class="opt-text" placeholder="${'ABCD'[i]})" value="${escapeHtml(opt)}"></div>`).join('')}</div><textarea placeholder="Explanation (optional, shown in results)" class="q-explanation">${escapeHtml(q.explanation || '')}</textarea><div class="card-actions"><button type="button" class="btn btn-danger btn-remove">Remove</button></div>`; container.appendChild(card); });
+      container.querySelectorAll('.question-card').forEach(card => { const index = parseInt(card.dataset.index, 10); const textarea = card.querySelector('.q-text'); const explTextarea = card.querySelector('.q-explanation'); const optInputs = card.querySelectorAll('.opt-text'); const radioInputs = card.querySelectorAll('input[type="radio"]'); if (!questions[index].options) questions[index].options = []; while (questions[index].options.length < 4) questions[index].options.push(''); textarea.addEventListener('change', () => { questions[index].text = textarea.value.trim(); save(); }); if (explTextarea) explTextarea.addEventListener('change', () => { questions[index].explanation = explTextarea.value.trim(); save(); }); optInputs.forEach((input, i) => { input.addEventListener('change', () => { questions[index].options[i] = input.value.trim(); save(); }); }); radioInputs.forEach((radio, i) => { radio.addEventListener('change', () => { if (radio.checked) questions[index].correctIndex = i; save(); }); }); card.querySelector('.btn-remove').addEventListener('click', () => { questions.splice(index, 1); save(); renderBuild(); }); });
     }
     document.getElementById('add-question').addEventListener('click', () => { questions.push({ text: '', options: ['', '', '', ''], correctIndex: 0 }); save(); renderBuild(); });
     document.getElementById('import-questions').addEventListener('click', () => { const raw = document.getElementById('bulk-questions').value.trim(); if (!raw) return; const blocks = raw.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean); const imported = []; for (const block of blocks) { const lines = block.split('\n').map(l => l.trim()); imported.push({ text: lines[0] || '', options: [lines[1] ?? '', lines[2] ?? '', lines[3] ?? '', lines[4] ?? ''], correctIndex: 0 }); } questions = imported; save(); renderBuild(); document.getElementById('bulk-questions').value = ''; });
     document.getElementById('apply-answer-key').addEventListener('click', () => { const raw = document.getElementById('answer-key').value.trim().toUpperCase(); const letters = raw.replace(/,/g, ' ').split(/\s+/).filter(Boolean); const map = { A: 0, B: 1, C: 2, D: 3 }; letters.forEach((letter, i) => { if (i < questions.length && letter in map) questions[i].correctIndex = map[letter]; }); save(); renderBuild(); document.getElementById('answer-key').value = ''; });
     document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); tab.classList.add('active'); document.getElementById(tab.dataset.tab + '-panel').classList.add('active'); if (tab.dataset.tab === 'take') renderTake(); }); });
     let selectedAnswers = {};
+    let displayOrder = [];
+    function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
     function renderTake() {
       const quizQuestions = document.getElementById('quiz-questions'); const progress = document.getElementById('quiz-progress'); const finishRow = document.getElementById('finish-row'); const resultsContainer = document.getElementById('results-container'); const emptyQuiz = document.getElementById('empty-quiz');
       const validQuestions = questions.filter(q => q.text.trim() && q.options.filter(o => o.trim()).length >= 2);
-      if (validQuestions.length === 0) { quizQuestions.innerHTML = ''; finishRow.style.display = 'none'; resultsContainer.style.display = 'none'; emptyQuiz.style.display = 'block'; return; }
+      displayOrder = shuffle(validQuestions);
+      if (displayOrder.length === 0) { quizQuestions.innerHTML = ''; finishRow.style.display = 'none'; resultsContainer.style.display = 'none'; emptyQuiz.style.display = 'block'; return; }
       emptyQuiz.style.display = 'none'; resultsContainer.style.display = 'none'; selectedAnswers = {}; finishRow.style.display = 'flex';
-      progress.textContent = validQuestions.length + ' question' + (validQuestions.length !== 1 ? 's' : '');
+      progress.textContent = displayOrder.length + ' question' + (displayOrder.length !== 1 ? 's' : '');
       quizQuestions.innerHTML = '';
-      validQuestions.forEach((q, index) => { const opts = q.options.filter(o => o.trim()); const block = document.createElement('div'); block.className = 'quiz-question'; block.innerHTML = `<h2>${index + 1}. ${escapeHtml(q.text)}</h2>${opts.map((opt, i) => `<button type="button" class="quiz-option" data-q="${index}" data-a="${i}">${escapeHtml(opt)}</button>`).join('')}`; quizQuestions.appendChild(block); });
+      displayOrder.forEach((q, index) => { const opts = q.options.filter(o => o.trim()); const block = document.createElement('div'); block.className = 'quiz-question'; block.innerHTML = `<h2>${index + 1}. ${escapeHtml(q.text)}</h2>${opts.map((opt, i) => `<button type="button" class="quiz-option" data-q="${index}" data-a="${i}">${escapeHtml(opt)}</button>`).join('')}`; quizQuestions.appendChild(block); });
       quizQuestions.querySelectorAll('.quiz-option').forEach(btn => { btn.addEventListener('click', () => { const qIndex = parseInt(btn.dataset.q, 10); const aIndex = parseInt(btn.dataset.a, 10); selectedAnswers[qIndex] = aIndex; btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }); });
     }
     function launchConfetti() {
@@ -604,16 +644,36 @@
     }
     document.getElementById('finish-btn').addEventListener('click', () => {
       const validQuestions = questions.filter(q => q.text.trim() && q.options.filter(o => o.trim()).length >= 2);
-      let correct = 0; const results = validQuestions.map((q, index) => { const opts = q.options.filter(o => o.trim()); const userChoice = selectedAnswers[index]; const isCorrect = userChoice === q.correctIndex; if (isCorrect) correct++; return { text: q.text, correct: isCorrect, userAnswer: userChoice !== undefined ? opts[userChoice] : '(not answered)', correctAnswer: opts[q.correctIndex] }; });
-      const score = validQuestions.length ? Math.round((correct / validQuestions.length) * 100) : 0;
+      const toGrade = displayOrder.length > 0 ? displayOrder : validQuestions;
+      let correct = 0; const results = toGrade.map((q, index) => { const opts = q.options.filter(o => o.trim()); const userChoice = selectedAnswers[index]; const isCorrect = userChoice === q.correctIndex; if (isCorrect) correct++; return { text: q.text, correct: isCorrect, userAnswer: userChoice !== undefined ? opts[userChoice] : '(not answered)', correctAnswer: opts[q.correctIndex], explanation: q.explanation }; });
+      const score = toGrade.length ? Math.round((correct / toGrade.length) * 100) : 0;
       const passed = score >= 70;
       const resultsContainer = document.getElementById('results-container'); resultsContainer.style.display = 'block';
-      resultsContainer.innerHTML = `<div class="results-card"><div class="score-big">${correct}/${validQuestions.length}</div><div class="score-label">${score}%</div>${results.map(r => `<div class="result-item"><span class="result-icon ${r.correct ? 'correct' : 'wrong'}">${r.correct ? '✓' : '✕'}</span><div class="result-text"><strong>${escapeHtml(r.text)}</strong><span>Your answer: ${escapeHtml(r.userAnswer)}${!r.correct ? ' — Correct: ' + escapeHtml(r.correctAnswer) : ''}</span></div></div>`).join('')}</div><div class="finish-row" style="margin-top:1rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take quiz again</button></div>`;
+      resultsContainer.innerHTML = `<div class="results-card"><div class="score-big">${correct}/${toGrade.length}</div><div class="score-label">${score}%</div><div class="result-filter" style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm result-filter-btn active" data-filter="all">All</button><button type="button" class="btn btn-ghost btn-sm result-filter-btn" data-filter="wrong">Wrong only</button></div><div id="result-items">${results.map(r => `<div class="result-item ${r.correct ? 'result-correct' : 'result-wrong'}"><span class="result-icon ${r.correct ? 'correct' : 'wrong'}">${r.correct ? '✓' : '✕'}</span><div class="result-text"><strong>${escapeHtml(r.text)}</strong><span>Your answer: ${escapeHtml(r.userAnswer)}${!r.correct ? ' — Correct: ' + escapeHtml(r.correctAnswer) : ''}</span>${r.explanation ? '<div class="explanation-block"><button type="button" class="explanation-toggle">Show explanation</button><div class="result-explanation" style="display:none">' + formatExplanation(r.explanation) + '</div></div>' : ''}</div></div>`).join('')}</div></div><div class="finish-row" style="margin-top:1rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take quiz again</button></div>`;
       document.getElementById('quiz-questions').style.display = 'none'; document.getElementById('finish-row').style.display = 'none'; document.getElementById('quiz-progress').textContent = 'Results';
+      document.querySelectorAll('.result-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.result-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.dataset.filter;
+          document.querySelectorAll('#result-items .result-item').forEach(el => {
+            el.style.display = filter === 'wrong' && el.classList.contains('result-correct') ? 'none' : '';
+          });
+        });
+      });
       if (passed) setTimeout(launchConfetti, 600);
       resultsContainer.querySelector('#retake-btn').addEventListener('click', () => { resultsContainer.style.display = 'none'; resultsContainer.innerHTML = ''; renderTake(); document.getElementById('quiz-questions').style.display = ''; });
     });
     loadQuizFromUrl(); renderBuild();
+    document.getElementById('results-container').addEventListener('click', (e) => {
+      if (e.target.classList.contains('explanation-toggle')) {
+        const block = e.target.closest('.explanation-block');
+        const explanation = block.querySelector('.result-explanation');
+        const isHidden = explanation.style.display === 'none';
+        explanation.style.display = isHidden ? 'block' : 'none';
+        e.target.textContent = isHidden ? 'Hide explanation' : 'Show explanation';
+      }
+    });
   </script>
 </body>
 </html>
