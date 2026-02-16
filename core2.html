@@ -8,74 +8,658 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root { --bg: #0f0f12; --surface: #18181d; --surface-hover: #222228; --border: #2a2a32; --text: #e8e8ed; --text-muted: #8888a0; --accent: #7c5cff; --accent-hover: #9278ff; --correct: #22c55e; --wrong: #ef4444; --radius: 12px; --radius-sm: 8px; }
+    :root { --bg: #0a0a0f; --surface: #14141c; --surface-hover: #1e1e2a; --border: #2a2a3a; --text: #e8e8f0; --text-muted: #7878a0; --accent: #7c5cff; --accent-hover: #9278ff; --accent2: #5ce1ff; --correct: #22c55e; --wrong: #ef4444; --radius: 14px; --radius-sm: 10px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
-    .app { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
-    .back-link:hover { color: var(--text); }
-    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
+    /* Floating background orbs */
+    .bg-glow { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .bg-glow.orb1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,92,255,0.18), transparent 70%); top: -10%; left: -10%; animation: float1 12s ease-in-out infinite; }
+    .bg-glow.orb2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(92,225,255,0.10), transparent 70%); bottom: -15%; right: -10%; animation: float2 15s ease-in-out infinite; }
+    .bg-glow.orb3 { width: 250px; height: 250px; background: radial-gradient(circle, rgba(92,225,255,0.08), transparent 70%); top: 40%; right: 10%; animation: float3 10s ease-in-out infinite; }
+    @keyframes float1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px,40px); } }
+    @keyframes float2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-50px,-30px); } }
+    @keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px,20px) scale(1.2); } }
+    .grid-overlay { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+    .app { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem; color: var(--text-muted); font-size: 0.85rem; text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 100px; transition: all 0.2s; }
+    .back-link:hover { color: var(--text); background: var(--surface); }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .exam-timer { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .exam-timer.low { color: var(--wrong); border-color: rgba(239,68,68,0.3); }
+    .exam-timer .timer-label { color: var(--text-muted); font-family: 'DM Sans', system-ui, sans-serif; font-size: 0.8rem; }
     .quiz-progress { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
-    .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .progress-bar-wrap { width: 100%; height: 4px; background: var(--border); border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; transition: width 0.4s ease; }
+    .section-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 2rem 0 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .pbq-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; transition: border-color 0.3s; }
+    .pbq-card:hover { border-color: rgba(124,92,255,0.3); }
+    .pbq-card h2 { font-size: 0.75rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+    .scenario { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin-bottom: 1rem; white-space: pre-wrap; line-height: 1.6; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.4rem; }
+    .field select { width: 100%; padding: 0.7rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; cursor: pointer; transition: border-color 0.2s; }
+    .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,0.15); }
+    .multiselect-hint { font-size: 0.82rem; color: var(--accent); margin-bottom: 0.5rem; font-weight: 500; }
+    .checkbox-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; }
+    .checkbox-option:hover { border-color: var(--accent); }
+    .checkbox-option input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+    .match-area { display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; margin-top: 0.75rem; }
+    .match-column h3 { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+    .match-slots { display: flex; flex-direction: column; gap: 0.5rem; }
+    .match-row { display: flex; align-items: center; gap: 0.5rem; min-height: 48px; padding: 0.5rem 0.6rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); transition: all 0.2s; }
+    .match-row.drag-over { border-color: var(--accent); background: rgba(124, 92, 255, 0.1); transform: scale(1.01); }
+    .match-row .port { font-family: inherit; font-size: 0.85rem; flex-shrink: 1; }
+    .match-row .drop-zone { flex: 1; min-height: 32px; min-width: 110px; }
+    .draggable-chip { padding: 0.4rem 0.75rem; background: var(--accent); color: white; border-radius: var(--radius-sm); font-size: 0.82rem; cursor: grab; user-select: none; transition: transform 0.15s, box-shadow 0.15s; white-space: nowrap; display: inline-block; }
+    .draggable-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,92,255,0.4); }
+    .draggable-chip:active { cursor: grabbing; }
+    .draggable-chip.dragging { opacity: 0.6; }
+    .chips-pool { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; transition: border-color 0.3s; }
+    .quiz-question:hover { border-color: rgba(124,92,255,0.2); }
     .quiz-question h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.4; }
     .quiz-option { display: block; width: 100%; padding: 1rem 1.25rem; margin-bottom: 0.5rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: all 0.2s; }
     .quiz-option:hover { border-color: var(--accent); background: var(--surface-hover); }
-    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(124, 92, 255, 0.15); box-shadow: 0 0 0 1px rgba(124,92,255,0.3); }
     .finish-row { margin-top: 1.5rem; display: flex; justify-content: center; }
-    .btn { padding: 0.9rem 2rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 500; cursor: pointer; background: var(--accent); color: white; }
-    .btn:hover { background: var(--accent-hover); }
-    .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; }
-    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
-    .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; text-align: center; margin-bottom: 1.5rem; }
-    .score-big { font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); margin-bottom: 0.25rem; }
+    .btn { padding: 1rem 2.5rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6040dd); color: white; transition: all 0.3s; box-shadow: 0 4px 16px rgba(124,92,255,0.25); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,255,0.35); }
+    .btn-ghost { background: transparent; color: var(--text-muted); margin-top: 1rem; box-shadow: none; border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); transform: none; box-shadow: none; }
+    .results-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; text-align: center; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+    .results-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent)); }
+    .score-big { font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 0.25rem; margin-top: 0.5rem; }
     .score-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
-    .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); text-align: left; }
+    .result-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); text-align: left; }
     .result-item:last-child { border-bottom: none; }
-    .result-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+    .result-icon { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
     .result-icon.correct { background: rgba(34, 197, 94, 0.2); color: var(--correct); }
     .result-icon.wrong { background: rgba(239, 68, 68, 0.2); color: var(--wrong); }
     .result-text strong { display: block; margin-bottom: 0.25rem; }
     .result-text span { color: var(--text-muted); font-size: 0.9rem; }
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    @media (max-width: 600px) {
+      .app { padding: 1rem; overflow-x: hidden; }
+      .pbq-card { padding: 1rem; overflow-x: hidden; }
+      .match-area { grid-template-columns: 1fr; gap: 1rem; min-width: 0; }
+      .match-column { min-width: 0; }
+      .match-column h3 { word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
+      .match-row { flex-wrap: wrap; min-width: 0; }
+      .match-row .port { flex: 1 1 100%; margin-bottom: 0.25rem; }
+      .match-row .drop-zone { min-width: 80px; flex: 1 1 auto; }
+      .chips-pool { min-width: 0; }
+    }
   </style>
 </head>
 <body>
+  <div class="bg-glow orb1"></div>
+  <div class="bg-glow orb2"></div>
+  <div class="bg-glow orb3"></div>
+  <div class="grid-overlay"></div>
   <div class="app">
-    <a href="index.html" class="back-link">← Back to home</a>
+    <a href="index.html" class="back-link">&larr; Back to home</a>
     <h1>CompTIA A+ Core 2</h1>
+    <div class="exam-timer" id="exam-timer" style="display: none;">
+      <span class="timer-label">Time remaining</span>
+      <span id="timer-display">90:00</span>
+    </div>
     <p class="quiz-progress" id="quiz-progress"></p>
+    <div class="progress-bar-wrap" id="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar"></div></div>
+
+    <div id="pbq-section">
+      <div class="section-label">Performance-based questions (PBQs)</div>
+      <!-- PBQ 1: Windows Boot Failure -->
+      <div class="pbq-card" data-pbq="1">
+        <h2>PBQ 1</h2>
+        <div class="scenario">A Windows 10 workstation fails to boot after a power outage.
+
+Symptoms:
+• "INACCESSIBLE_BOOT_DEVICE" blue screen
+• BIOS sees the SSD
+• Boot order is correct
+• System was recently cloned from HDD to SSD</div>
+        <div class="field">
+          <label>Identify the MOST likely root cause.</label>
+          <select id="pbq1-cause">
+            <option value="">— Select —</option>
+            <option value="bcd">Boot configuration (BCD) corruption or mismatch after clone</option>
+            <option value="ssd">SSD hardware failure</option>
+            <option value="power">Power supply damage from outage</option>
+            <option value="driver">Missing storage driver</option>
+            <option value="mbr">MBR corruption</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>List TWO corrective actions. (Select the FIRST action)</label>
+          <select id="pbq1-action1">
+            <option value="">— Select —</option>
+            <option value="rebuild-bcd">Repair BCD using bootrec</option>
+            <option value="uefi-csm">Set correct UEFI/CSM mode</option>
+            <option value="startup-repair">Run Startup Repair</option>
+            <option value="fixmbr">Run bootrec /fixmbr</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>List TWO corrective actions. (Select the SECOND action)</label>
+          <select id="pbq1-action2">
+            <option value="">— Select —</option>
+            <option value="rebuild-bcd">Repair BCD using bootrec</option>
+            <option value="uefi-csm">Set correct UEFI/CSM mode</option>
+            <option value="startup-repair">Run Startup Repair</option>
+            <option value="fixmbr">Run bootrec /fixmbr</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Which Windows recovery tool should be used FIRST?</label>
+          <select id="pbq1-tool">
+            <option value="">— Select —</option>
+            <option value="bootrec">bootrec (via Command Prompt)</option>
+            <option value="startup-repair">Startup Repair</option>
+            <option value="system-restore">System Restore</option>
+            <option value="reset">Reset this PC</option>
+          </select>
+        </div>
+      </div>
+      <!-- PBQ 2: Malware Infection -->
+      <div class="pbq-card" data-pbq="2">
+        <h2>PBQ 2</h2>
+        <div class="scenario">A user reports:
+• Browser redirects
+• Unknown toolbars installed
+• High CPU usage from random processes
+• Windows Defender disabled</div>
+        <div class="field">
+          <label>List the correct malware removal procedure in order. (Select the FIRST step)</label>
+          <select id="pbq2-step1">
+            <option value="">— Select —</option>
+            <option value="quarantine">Isolate system</option>
+            <option value="identify">Identify and document symptoms</option>
+            <option value="disable-sr">Disable System Restore</option>
+            <option value="update-av">Update antivirus definitions</option>
+            <option value="scan">Scan and remove malware</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Identify the MOST likely infection type.</label>
+          <select id="pbq2-type">
+            <option value="">— Select —</option>
+            <option value="adware">Adware / PUP (Potentially Unwanted Program)</option>
+            <option value="ransomware">Ransomware</option>
+            <option value="rootkit">Rootkit</option>
+            <option value="trojan">Trojan</option>
+          </select>
+        </div>
+        <p class="multiselect-hint" style="margin-top:1rem;">Select TWO prevention mechanisms to enable after cleanup:</p>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-prev-A" value="A"><label for="pbq2-prev-A">Enable Windows Defender / real-time protection</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-prev-B" value="B"><label for="pbq2-prev-B">Enable UAC</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-prev-C" value="C"><label for="pbq2-prev-C">Enable automatic Windows updates</label></div>
+        <div class="checkbox-option"><input type="checkbox" id="pbq2-prev-D" value="D"><label for="pbq2-prev-D">Disable firewall</label></div>
+      </div>
+      <!-- PBQ 3: Windows Permissions -->
+      <div class="pbq-card" data-pbq="3">
+        <h2>PBQ 3</h2>
+        <div class="scenario">A company has the following requirements for the Finance folder:
+
+• Finance group: Full Control
+• Managers group: Read
+• Everyone else: No access
+• Inheritance is currently enabled from parent directory.</div>
+        <div class="field">
+          <label>What must be modified first?</label>
+          <select id="pbq3-first">
+            <option value="">— Select —</option>
+            <option value="disable">Disable inheritance</option>
+            <option value="convert">Convert inherited permissions to explicit</option>
+            <option value="add-finance">Add Finance group with Full Control</option>
+            <option value="remove-everyone">Remove Everyone</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>What permission entries must be removed?</label>
+          <select id="pbq3-remove">
+            <option value="">— Select —</option>
+            <option value="inherited">Remove inherited permissions not required</option>
+            <option value="everyone">Everyone (if inherited)</option>
+            <option value="finance">Finance group</option>
+            <option value="managers">Managers group</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Should inheritance be disabled or converted?</label>
+          <select id="pbq3-inherit">
+            <option value="">— Select —</option>
+            <option value="convert">Convert then remove unwanted entries</option>
+            <option value="disable">Disable inheritance (remove all inherited)</option>
+            <option value="keep">Keep inheritance enabled</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>What permission type (NTFS or Share) has priority if both exist?</label>
+          <select id="pbq3-priority">
+            <option value="">— Select —</option>
+            <option value="restrictive">Most restrictive of the two applies (for network access)</option>
+            <option value="ntfs">NTFS always wins</option>
+            <option value="share">Share permissions always win</option>
+            <option value="additive">Permissions are additive</option>
+          </select>
+        </div>
+      </div>
+      <!-- PBQ 4: Command Line / APIPA -->
+      <div class="pbq-card" data-pbq="4">
+        <h2>PBQ 4</h2>
+        <div class="scenario">A technician runs ipconfig /all and sees:
+
+IPv4: 169.254.33.12
+DNS: blank
+Gateway: blank</div>
+        <div class="field">
+          <label>Identify the issue.</label>
+          <select id="pbq4-issue">
+            <option value="">— Select —</option>
+            <option value="apipa">APIPA address — DHCP unreachable or not configured</option>
+            <option value="dns">DNS misconfiguration</option>
+            <option value="static">Incorrect static IP</option>
+            <option value="gateway">Gateway down</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Identify TWO commands to resolve it. (First command)</label>
+          <select id="pbq4-cmd1">
+            <option value="">— Select —</option>
+            <option value="release">ipconfig /release</option>
+            <option value="renew">ipconfig /renew</option>
+            <option value="physical">Check physical cable / connection</option>
+            <option value="flush">ipconfig /flushdns</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Identify TWO commands to resolve it. (Second command)</label>
+          <select id="pbq4-cmd2">
+            <option value="">— Select —</option>
+            <option value="release">ipconfig /release</option>
+            <option value="renew">ipconfig /renew</option>
+            <option value="physical">Check physical cable / connection</option>
+            <option value="flush">ipconfig /flushdns</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Which service must be running?</label>
+          <select id="pbq4-service">
+            <option value="">— Select —</option>
+            <option value="dhcp">DHCP Client</option>
+            <option value="dns">DNS Client</option>
+            <option value="wlan">WLAN AutoConfig</option>
+            <option value="netlogon">Netlogon</option>
+          </select>
+        </div>
+      </div>
+      <!-- PBQ 5: Security Policy Match -->
+      <div class="pbq-card" data-pbq="5">
+        <h2>PBQ 5</h2>
+        <div class="scenario">You are securing a small business Windows environment. Match each requirement to the correct control.</div>
+        <div class="match-area">
+          <div class="match-column">
+            <h3>Requirement</h3>
+            <div class="match-slots" id="match-slots">
+              <div class="match-row" data-port="brute"><span class="port">Prevent brute force login</span><div class="drop-zone" data-port="brute"></div></div>
+              <div class="match-row" data-port="usb"><span class="port">Prevent unauthorized USB storage</span><div class="drop-zone" data-port="usb"></div></div>
+              <div class="match-row" data-port="encrypt"><span class="port">Ensure disk encryption</span><div class="drop-zone" data-port="encrypt"></div></div>
+              <div class="match-row" data-port="recovery"><span class="port">Ensure system recovery capability</span><div class="drop-zone" data-port="recovery"></div></div>
+            </div>
+          </div>
+          <div class="match-column">
+            <h3>Control (drag to requirement)</h3>
+            <div class="chips-pool" id="chips-pool">
+              <span class="draggable-chip" draggable="true" data-protocol="BitLocker">BitLocker</span>
+              <span class="draggable-chip" draggable="true" data-protocol="Account lockout policy">Account lockout policy</span>
+              <span class="draggable-chip" draggable="true" data-protocol="Removable storage restriction">Removable storage restriction</span>
+              <span class="draggable-chip" draggable="true" data-protocol="System image backup">System image backup</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label" id="mc-section-label" style="display: none;">Multiple choice</div>
     <div id="quiz-questions"></div>
-    <div class="finish-row" id="finish-row" style="display: none;">
+    <div class="finish-row">
       <button type="button" class="btn" id="finish-btn">Finish &amp; grade</button>
     </div>
     <div id="results-container" style="display: none;"></div>
-    <div id="empty-quiz" class="empty-state" style="display: none;">
-      <p>No questions in this test yet. Check back later or use Build your own quiz from the home page.</p>
-    </div>
   </div>
   <script>
-    const questions = [];
+    const questions = [
+      { text: "A Windows system boots to a black screen with a cursor after login. Safe Mode works. What is MOST likely the issue?", options: ["A. Corrupt boot sector", "B. Failing GPU", "C. Corrupt explorer shell or startup process", "D. BitLocker misconfiguration"], correctIndex: 2 },
+      { text: "Which TWO tools can be used to repair Windows boot configuration? (Choose TWO)", options: ["A. bootrec", "B. sfc", "C. bcdedit", "D. chkdsk"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "Which Windows edition supports joining an Active Directory domain?", options: ["A. Windows 11 Home", "B. Windows 11 Pro", "C. Windows 11 S Mode", "D. Windows 11 Education (standalone only)"], correctIndex: 1 },
+      { text: "A user cannot install applications due to \"Administrator approval required.\" UAC is enabled. What is the correct fix?", options: ["A. Disable UAC", "B. Add user to local Administrators group", "C. Run installer as Administrator", "D. Enable Secure Boot"], correctIndex: 2 },
+      { text: "Which attack type involves encrypting user files and demanding payment?", options: ["A. Worm", "B. Rootkit", "C. Ransomware", "D. Trojan"], correctIndex: 2 },
+      { text: "Which THREE are examples of multifactor authentication? (Choose THREE)", options: ["A. Password", "B. Smart card", "C. Fingerprint", "D. PIN", "E. OTP token"], correctIndex: -1, multiSelect: true, correctValues: [1, 2, 4] },
+      { text: "Which Windows feature prevents unauthorized OS loaders from executing at boot?", options: ["A. BitLocker", "B. Secure Boot", "C. NTFS", "D. Windows Defender"], correctIndex: 1 },
+      { text: "A technician must securely erase an SSD before disposal. What method is MOST appropriate?", options: ["A. Format drive", "B. DBAN overwrite", "C. Manufacturer secure erase command", "D. Delete partitions"], correctIndex: 2 },
+      { text: "A Windows system repeatedly fails to apply updates with error 0x800f0922. What should be checked FIRST?", options: ["A. Network connectivity", "B. Reserved system partition size", "C. GPU driver version", "D. BitLocker key"], correctIndex: 1 },
+      { text: "Which of the following BEST describes least privilege?", options: ["A. Users receive admin rights by default", "B. Users only receive permissions necessary for tasks", "C. Disable all local accounts", "D. Enforce strong passwords"], correctIndex: 1 },
+      { text: "A Windows system fails to boot with \"Operating System not found.\" BIOS detects the drive. Boot order is correct. The disk uses GPT and the system was previously UEFI. What is MOST likely misconfigured?", options: ["A. Secure Boot disabled", "B. CSM/Legacy mode enabled", "C. BitLocker recovery key missing", "D. NTFS permissions"], correctIndex: 1 },
+      { text: "Which TWO commands verify integrity of Windows system files? (Choose TWO)", options: ["A. sfc /scannow", "B. chkdsk /f", "C. DISM /restorehealth", "D. bootrec /fixmbr"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "A user reports extremely slow login times on a domain-joined PC. Local login is fast. What is MOST likely the issue?", options: ["A. DNS misconfiguration", "B. Corrupt profile", "C. Failing SSD", "D. Incorrect time zone"], correctIndex: 0 },
+      { text: "Which Windows feature isolates applications in lightweight containers to prevent system compromise?", options: ["A. Hyper-V", "B. Sandbox", "C. BitLocker", "D. NTFS"], correctIndex: 1 },
+      { text: "A technician suspects a rootkit. Which environment is BEST for removal?", options: ["A. Normal Windows session", "B. Safe Mode", "C. Offline bootable antivirus environment", "D. Recovery Console only"], correctIndex: 2 },
+      { text: "A user's system is infected with spyware that logs keystrokes. What type of malware is this?", options: ["A. Worm", "B. Keylogger", "C. Logic bomb", "D. Backdoor"], correctIndex: 1 },
+      { text: "Which TWO are valid encryption methods for Wi-Fi? (Choose TWO)", options: ["A. TKIP", "B. AES", "C. WPA3", "D. WEP"], correctIndex: -1, multiSelect: true, correctValues: [1, 2] },
+      { text: "Which Windows tool displays startup programs and allows disabling them?", options: ["A. services.msc", "B. msconfig", "C. taskmgr", "D. eventvwr"], correctIndex: 2 },
+      { text: "A user cannot access a shared folder. NTFS permissions allow access. Share permissions are set to Read. User needs Write. What is required?", options: ["A. Modify NTFS", "B. Modify Share permissions", "C. Disable inheritance", "D. Enable Offline Files"], correctIndex: 1 },
+      { text: "Which log in Event Viewer would MOST likely show driver initialization failures?", options: ["A. Security", "B. Application", "C. System", "D. Setup"], correctIndex: 2 },
+      { text: "Which method BEST prevents shoulder surfing attacks?", options: ["A. Account lockout", "B. Privacy screen filter", "C. Disable USB", "D. TPM"], correctIndex: 1 },
+      { text: "Which tool configures local security policy settings?", options: ["A. secpol.msc", "B. gpupdate", "C. lusrmgr.msc", "D. services.msc"], correctIndex: 0 },
+      { text: "Which Linux command changes file permissions?", options: ["A. chown", "B. chmod", "C. ls", "D. grep"], correctIndex: 1 },
+      { text: "A Windows 11 system cannot enable BitLocker. TPM 2.0 is present but disabled. What must be done?", options: ["A. Update BIOS", "B. Enable TPM in firmware", "C. Convert MBR to GPT", "D. Disable Secure Boot"], correctIndex: 1 },
+      { text: "Which are examples of social engineering attacks? (Select all that apply)", options: ["A. Phishing", "B. Shoulder surfing", "C. DDoS", "D. Tailgating", "E. Vishing"], correctIndex: -1, multiSelect: true, correctValues: [0, 1, 3, 4] },
+      { text: "A Windows device frequently displays \"Driver Power State Failure.\" What is MOST likely?", options: ["A. Corrupt registry", "B. Incompatible driver", "C. Failing CPU", "D. Corrupt bootloader"], correctIndex: 1 },
+      { text: "Which Windows tool is used to configure advanced firewall rules?", options: ["A. wf.msc", "B. firewall.cpl", "C. secpol.msc", "D. gpresult"], correctIndex: 0 },
+      { text: "A technician must verify open TCP ports on a local machine. Which command?", options: ["A. netstat -an", "B. ping", "C. ipconfig", "D. tracert"], correctIndex: 0 },
+      { text: "Which attack attempts to overwhelm a system by exhausting resources?", options: ["A. MITM", "B. DDoS", "C. SQL injection", "D. XSS"], correctIndex: 1 },
+      { text: "Which partition style supports drives larger than 2TB?", options: ["A. MBR", "B. GPT", "C. FAT32", "D. exFAT"], correctIndex: 1 },
+      { text: "Which Windows edition supports BitLocker?", options: ["A. Home", "B. Pro", "C. Starter", "D. S Mode"], correctIndex: 1 },
+      { text: "A user reports constant UAC prompts for standard tasks. What is MOST likely misconfigured?", options: ["A. UAC level set too high", "B. User in Guests group", "C. Corrupt OS", "D. Secure Boot disabled"], correctIndex: 0 },
+      { text: "Which protocol encrypts remote management traffic?", options: ["A. Telnet", "B. FTP", "C. SSH", "D. SNMPv1"], correctIndex: 2 },
+      { text: "Which Windows feature allows rolling back to previous driver version?", options: ["A. Device Manager rollback", "B. chkdsk", "C. DISM", "D. msconfig"], correctIndex: 0 },
+      { text: "A laptop repeatedly locks accounts after failed login attempts. What policy is responsible?", options: ["A. Password complexity", "B. Account lockout threshold", "C. Audit policy", "D. Secure Boot"], correctIndex: 1 },
+      { text: "Which macOS utility verifies disk integrity?", options: ["A. Activity Monitor", "B. Disk Utility", "C. Finder", "D. Keychain"], correctIndex: 1 },
+      { text: "Which best describes a zero-day vulnerability?", options: ["A. Known vulnerability patched", "B. Exploit unknown to vendor", "C. Malware signature detected", "D. Expired certificate"], correctIndex: 1 },
+      { text: "A Windows machine cannot reach internal resources after IP change. Which should be flushed?", options: ["A. ARP cache", "B. DNS cache", "C. BIOS", "D. CMOS"], correctIndex: 1 },
+      { text: "Which type of backup copies only files changed since last full backup?", options: ["A. Incremental", "B. Differential", "C. Full", "D. Synthetic"], correctIndex: 0 },
+      { text: "Which command updates Group Policy immediately?", options: ["A. gpresult", "B. gpupdate /force", "C. secpol", "D. net use"], correctIndex: 1 },
+      { text: "A user's system is infected with ransomware. After isolation, what is the MOST appropriate recovery method?", options: ["A. Run sfc", "B. Restore from clean backup", "C. Disable firewall", "D. Delete registry entries"], correctIndex: 1 },
+      { text: "Which TWO actions reduce attack surface on a Windows workstation? (Choose TWO)", options: ["A. Disable unused services", "B. Install more RAM", "C. Remove unnecessary software", "D. Increase page file size"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "A Windows system crashes with IRQL_NOT_LESS_OR_EQUAL. What is MOST likely the cause?", options: ["A. Corrupt user profile", "B. Faulty driver or memory", "C. DNS issue", "D. BitLocker key mismatch"], correctIndex: 1 },
+      { text: "Which Windows feature allows restricting USB storage devices via policy?", options: ["A. NTFS", "B. Group Policy", "C. BitLocker", "D. Event Viewer"], correctIndex: 1 },
+      { text: "A technician suspects a corrupted Windows image. Which tool should be run FIRST?", options: ["A. chkdsk", "B. sfc", "C. DISM", "D. bootrec"], correctIndex: 1 },
+      { text: "Which Linux command displays running processes?", options: ["A. ps", "B. chmod", "C. grep", "D. nano"], correctIndex: 0 },
+      { text: "Which TWO are characteristics of worms? (Choose TWO)", options: ["A. Require user interaction", "B. Self-replicating", "C. Spread over networks", "D. Encrypt files"], correctIndex: -1, multiSelect: true, correctValues: [1, 2] },
+      { text: "A Windows PC cannot join a domain. Time is off by 7 minutes. What is MOST likely preventing the join?", options: ["A. DNS", "B. Kerberos time skew", "C. Firewall rule", "D. NTFS permissions"], correctIndex: 1 },
+      { text: "Which encryption protects data at rest on Windows laptops?", options: ["A. TLS", "B. SSH", "C. BitLocker", "D. IPSec"], correctIndex: 2 },
+      { text: "Which tool shows which program is using a specific TCP port?", options: ["A. ipconfig", "B. netstat -ano", "C. ping", "D. taskkill"], correctIndex: 1 },
+      { text: "A technician needs to reset a forgotten local Windows password without domain access. What environment is required?", options: ["A. BIOS", "B. Windows Recovery Environment", "C. Event Viewer", "D. Device Manager"], correctIndex: 1 },
+      { text: "Which TWO Windows features support virtualization? (Choose TWO)", options: ["A. Hyper-V", "B. BitLocker", "C. Windows Sandbox", "D. NTFS compression"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "Which type of attack injects malicious SQL commands into a web form?", options: ["A. XSS", "B. SQL injection", "C. DDoS", "D. MITM"], correctIndex: 1 },
+      { text: "A user cannot access HTTPS websites. HTTP works. What is MOST likely the issue?", options: ["A. DNS", "B. Expired certificate", "C. Corrupt SSD", "D. NTFS permissions"], correctIndex: 1 },
+      { text: "Which policy enforces password complexity requirements?", options: ["A. Account lockout", "B. Audit policy", "C. Password policy", "D. UAC"], correctIndex: 2 },
+      { text: "A system displays \"BOOTMGR is missing.\" What should be repaired?", options: ["A. MBR or BCD", "B. DNS cache", "C. GPU driver", "D. NTFS ACL"], correctIndex: 0 },
+      { text: "Which TWO are examples of physical security controls? (Choose TWO)", options: ["A. Biometric scanner", "B. Firewall", "C. Locked server rack", "D. IDS"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "Which protocol encrypts web traffic?", options: ["A. FTP", "B. HTTP", "C. HTTPS", "D. Telnet"], correctIndex: 2 },
+      { text: "A technician needs to analyze system crashes. Which file type is required?", options: ["A. .evt", "B. .dmp", "C. .sys", "D. .ini"], correctIndex: 1 },
+      { text: "Which attack relies on tricking users into clicking malicious links?", options: ["A. Phishing", "B. Rootkit", "C. Logic bomb", "D. Backdoor"], correctIndex: 0 },
+      { text: "Which Windows feature prevents unauthorized code from executing?", options: ["A. Secure Boot", "B. AppLocker", "C. NTFS", "D. SMB"], correctIndex: 1 },
+      { text: "A technician must ensure only specific apps can run on a workstation. What should be configured?", options: ["A. Firewall rules", "B. AppLocker", "C. BitLocker", "D. Event logging"], correctIndex: 1 },
+      { text: "Which THREE are examples of data destruction methods? (Choose THREE)", options: ["A. Shredding", "B. Degaussing", "C. Formatting", "D. Drive wiping", "E. Pulverizing"], correctIndex: -1, multiSelect: true, correctValues: [0, 1, 4] },
+      { text: "A user's PC is extremely slow. Task Manager shows 99% memory usage. What is MOST likely needed?", options: ["A. Disable Secure Boot", "B. Add RAM", "C. Update BIOS", "D. Reinstall OS"], correctIndex: 1 },
+      { text: "Which protocol secures email retrieval?", options: ["A. IMAP", "B. POP3", "C. IMAPS", "D. SMTP"], correctIndex: 2 },
+      { text: "A technician needs to view applied Group Policies on a workstation. Which command?", options: ["A. gpupdate", "B. gpresult /r", "C. secpol", "D. netstat"], correctIndex: 1 },
+      { text: "Which backup type copies all files every time?", options: ["A. Full", "B. Differential", "C. Incremental", "D. Synthetic"], correctIndex: 0 },
+      { text: "Which TWO can cause Windows update failures? (Choose TWO)", options: ["A. Insufficient disk space", "B. Disabled Windows Update service", "C. TPM mismatch", "D. Overclocked GPU"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "Which macOS feature encrypts the entire disk?", options: ["A. Time Machine", "B. FileVault", "C. Keychain", "D. Spotlight"], correctIndex: 1 },
+      { text: "A user reports that after installing software, the system crashes at startup. What should be attempted FIRST?", options: ["A. System Restore", "B. Format drive", "C. Replace RAM", "D. Disable TPM"], correctIndex: 0 },
+      { text: "Which Windows account type has the LEAST privileges by default?", options: ["A. Administrator", "B. Power User", "C. Standard User", "D. Guest"], correctIndex: 3 },
+      { text: "Which attack captures authentication hashes over the network?", options: ["A. Pass-the-hash", "B. DDoS", "C. SQL injection", "D. XSS"], correctIndex: 0 },
+      { text: "Which Linux command searches text inside files?", options: ["A. grep", "B. chmod", "C. ps", "D. tar"], correctIndex: 0 },
+      { text: "Which Windows feature prevents brute force login attempts?", options: ["A. BitLocker", "B. Account lockout threshold", "C. NTFS encryption", "D. Secure Boot"], correctIndex: 1 },
+      { text: "A system displays \"Access Denied\" when writing to a folder. The user owns the folder. What is MOST likely missing?", options: ["A. Read permission", "B. Write permission", "C. Share permission", "D. Execute permission"], correctIndex: 1 },
+      { text: "Which TWO tools can analyze Windows logs? (Choose TWO)", options: ["A. Event Viewer", "B. Reliability Monitor", "C. Device Manager", "D. Disk Cleanup"], correctIndex: -1, multiSelect: true, correctValues: [0, 1] },
+      { text: "A technician suspects corrupted registry entries. Which recovery option is BEST?", options: ["A. System Restore", "B. Replace motherboard", "C. Update firmware", "D. Clear CMOS"], correctIndex: 0 },
+      { text: "Which port does secure LDAP use?", options: ["A. 389", "B. 443", "C. 636", "D. 993"], correctIndex: 2 },
+      { text: "Which Windows service handles print jobs?", options: ["A. Spooler", "B. DHCP", "C. RPC", "D. DNS"], correctIndex: 0 },
+      { text: "Which encryption uses public/private key pairs?", options: ["A. Symmetric", "B. Asymmetric", "C. Hashing", "D. Tokenization"], correctIndex: 1 },
+      { text: "A user receives certificate warnings for all websites. What is MOST likely?", options: ["A. DNS failure", "B. Incorrect system date/time", "C. Corrupt SSD", "D. Firewall misconfiguration"], correctIndex: 1 },
+      { text: "Which TWO are required for BitLocker to function securely? (Choose TWO)", options: ["A. TPM", "B. NTFS", "C. Secure Boot", "D. FAT32"], correctIndex: -1, multiSelect: true, correctValues: [0, 2] },
+      { text: "Which Windows mode loads minimal drivers and services?", options: ["A. Recovery", "B. Safe Mode", "C. Audit Mode", "D. Kiosk Mode"], correctIndex: 1 },
+      { text: "Which file system supports file-level permissions in Windows?", options: ["A. FAT32", "B. exFAT", "C. NTFS", "D. ReFS only"], correctIndex: 2 },
+      { text: "Which principle ensures systems remain functional during hardware failure?", options: ["A. Confidentiality", "B. Integrity", "C. Availability", "D. Non-repudiation"], correctIndex: 2 }
+    ];
+    const PBQ_COUNT = 5;
+    const PBQ_CORRECT = {
+      pbq1: { cause: 'bcd', action1: 'rebuild-bcd', action2: 'uefi-csm', tool: 'bootrec' },
+      pbq2: { step1: 'quarantine', type: 'adware', prev: ['A', 'C'] },
+      pbq3: { first: 'disable', remove: 'inherited', inherit: 'convert', priority: 'restrictive' },
+      pbq4: { issue: 'apipa', cmd1: 'release', cmd2: 'renew', service: 'dhcp' },
+      pbq5: { brute: 'Account lockout policy', usb: 'Removable storage restriction', encrypt: 'BitLocker', recovery: 'System image backup' }
+    };
+    const EXAM_MINUTES = 90;
+    let timerSeconds = EXAM_MINUTES * 60;
+    let timerInterval = null;
+    let matchAssignments = {};
+    let draggedChip = null;
     function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
     let selectedAnswers = {};
+    function formatTime(sec) { const m = Math.floor(sec / 60); const s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      const el = document.getElementById('timer-display');
+      const container = document.getElementById('exam-timer');
+      function tick() {
+        if (timerSeconds <= 0) { clearInterval(timerInterval); timerInterval = null; el.textContent = '0:00'; container.classList.add('low'); return; }
+        el.textContent = formatTime(timerSeconds);
+        container.classList.toggle('low', timerSeconds < 600);
+        timerSeconds--;
+      }
+      tick();
+      timerInterval = setInterval(tick, 1000);
+    }
+    function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+    function updateProgressBar() {
+      const totalMc = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2).length;
+      const total = PBQ_COUNT + totalMc;
+      let answered = Object.keys(selectedAnswers).length;
+      const pbq1Done = document.getElementById('pbq1-cause').value ? 1 : 0;
+      answered += pbq1Done;
+      const pct = total > 0 ? Math.min(100, Math.round((answered / total) * 100)) : 0;
+      document.getElementById('progress-bar').style.width = pct + '%';
+    }
+    function gradePbqs() {
+      let score = 0;
+      if (document.getElementById('pbq1-cause').value === PBQ_CORRECT.pbq1.cause && document.getElementById('pbq1-action1').value === PBQ_CORRECT.pbq1.action1 && document.getElementById('pbq1-action2').value === PBQ_CORRECT.pbq1.action2 && document.getElementById('pbq1-tool').value === PBQ_CORRECT.pbq1.tool) score++;
+      if (document.getElementById('pbq2-step1').value === PBQ_CORRECT.pbq2.step1 && document.getElementById('pbq2-type').value === PBQ_CORRECT.pbq2.type) {
+        const prevChecked = ['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value).sort().join(',');
+        if (prevChecked === [...PBQ_CORRECT.pbq2.prev].sort().join(',')) score++;
+      }
+      if (document.getElementById('pbq3-first').value === PBQ_CORRECT.pbq3.first && document.getElementById('pbq3-remove').value === PBQ_CORRECT.pbq3.remove && document.getElementById('pbq3-inherit').value === PBQ_CORRECT.pbq3.inherit && document.getElementById('pbq3-priority').value === PBQ_CORRECT.pbq3.priority) score++;
+      if (document.getElementById('pbq4-issue').value === PBQ_CORRECT.pbq4.issue && document.getElementById('pbq4-cmd1').value === PBQ_CORRECT.pbq4.cmd1 && document.getElementById('pbq4-cmd2').value === PBQ_CORRECT.pbq4.cmd2 && document.getElementById('pbq4-service').value === PBQ_CORRECT.pbq4.service) score++;
+      let q5ok = true;
+      for (const k of Object.keys(PBQ_CORRECT.pbq5)) { if (matchAssignments[k] !== PBQ_CORRECT.pbq5[k]) q5ok = false; }
+      if (q5ok && Object.keys(matchAssignments).length === 4) score++;
+      return score;
+    }
+    function getPbqFeedback() {
+      const fb = [];
+      fb.push({ n: 1, ok: document.getElementById('pbq1-cause').value === PBQ_CORRECT.pbq1.cause && document.getElementById('pbq1-action1').value === PBQ_CORRECT.pbq1.action1 && document.getElementById('pbq1-action2').value === PBQ_CORRECT.pbq1.action2 && document.getElementById('pbq1-tool').value === PBQ_CORRECT.pbq1.tool });
+      fb.push({ n: 2, ok: document.getElementById('pbq2-step1').value === PBQ_CORRECT.pbq2.step1 && document.getElementById('pbq2-type').value === PBQ_CORRECT.pbq2.type && ['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value).sort().join(',') === [...PBQ_CORRECT.pbq2.prev].sort().join(',') });
+      fb.push({ n: 3, ok: document.getElementById('pbq3-first').value === PBQ_CORRECT.pbq3.first && document.getElementById('pbq3-remove').value === PBQ_CORRECT.pbq3.remove && document.getElementById('pbq3-inherit').value === PBQ_CORRECT.pbq3.inherit && document.getElementById('pbq3-priority').value === PBQ_CORRECT.pbq3.priority });
+      fb.push({ n: 4, ok: document.getElementById('pbq4-issue').value === PBQ_CORRECT.pbq4.issue && document.getElementById('pbq4-cmd1').value === PBQ_CORRECT.pbq4.cmd1 && document.getElementById('pbq4-cmd2').value === PBQ_CORRECT.pbq4.cmd2 && document.getElementById('pbq4-service').value === PBQ_CORRECT.pbq4.service });
+      let q5ok = true;
+      for (const k of Object.keys(PBQ_CORRECT.pbq5)) { if (matchAssignments[k] !== PBQ_CORRECT.pbq5[k]) q5ok = false; }
+      fb.push({ n: 5, ok: q5ok && Object.keys(matchAssignments).length === 4 });
+      return fb;
+    }
+    const chipsPool = document.getElementById('chips-pool');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    function getDropTargetAt(x, y) {
+      const els = document.elementsFromPoint(x, y);
+      for (const el of els) {
+        if (el.classList && el.classList.contains('drop-zone')) return { type: 'zone', el: el };
+        if (el.id === 'chips-pool' || (el.closest && el.closest('#chips-pool'))) return { type: 'pool', el: chipsPool };
+      }
+      return null;
+    }
+    function dropChipOnZone(chip, zone) {
+      const port = zone.dataset.port;
+      if (zone.firstChild) {
+        const old = zone.firstChild;
+        const oldProtocol = old.dataset.protocol;
+        delete matchAssignments[port];
+        old.remove();
+        const back = document.createElement('span');
+        back.textContent = oldProtocol;
+        back.dataset.protocol = oldProtocol;
+        makeChipDraggable(back);
+        chipsPool.appendChild(back);
+      }
+      chip.remove();
+      zone.appendChild(chip);
+      matchAssignments[port] = chip.dataset.protocol;
+    }
+    function returnChipToPool(chip) {
+      if (chip.parentElement && chip.parentElement.classList.contains('drop-zone')) {
+        const port = chip.parentElement.dataset.port;
+        delete matchAssignments[port];
+        chip.parentElement.removeChild(chip);
+      }
+      chipsPool.appendChild(chip);
+    }
+    function makeChipDraggable(chip) {
+      chip.draggable = true;
+      chip.dataset.protocol = chip.textContent.trim();
+      chip.classList.add('draggable-chip');
+      chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', chip.dataset.protocol); e.dataTransfer.effectAllowed = 'move'; chip.classList.add('dragging'); draggedChip = chip; });
+      chip.addEventListener('dragend', () => { chip.classList.remove('dragging'); draggedChip = null; });
+      let touchClone = null, touchStarted = false, lastHighlight = null;
+      chip.addEventListener('touchstart', e => { e.preventDefault(); touchStarted = true; draggedChip = chip; const touch = e.touches[0]; touchClone = chip.cloneNode(true); touchClone.style.cssText = 'position:fixed;z-index:10000;pointer-events:none;opacity:0.85;transform:scale(1.1);left:'+(touch.clientX-50)+'px;top:'+(touch.clientY-20)+'px'; document.body.appendChild(touchClone); chip.style.opacity = '0.3'; }, { passive: false });
+      chip.addEventListener('touchmove', e => { if (!touchStarted || !touchClone) return; e.preventDefault(); const touch = e.touches[0]; touchClone.style.left = (touch.clientX-50)+'px'; touchClone.style.top = (touch.clientY-20)+'px'; if (lastHighlight) { lastHighlight.closest('.match-row').classList.remove('drag-over'); lastHighlight = null; } const target = getDropTargetAt(touch.clientX, touch.clientY); if (target && target.type === 'zone') { target.el.closest('.match-row').classList.add('drag-over'); lastHighlight = target.el; } }, { passive: false });
+      chip.addEventListener('touchend', e => { if (!touchStarted) return; touchStarted = false; chip.style.opacity = ''; if (touchClone) { touchClone.remove(); touchClone = null; } if (lastHighlight) { lastHighlight.closest('.match-row').classList.remove('drag-over'); lastHighlight = null; } const touch = e.changedTouches[0]; const target = getDropTargetAt(touch.clientX, touch.clientY); if (target && target.type === 'zone') dropChipOnZone(chip, target.el); else if (target && target.type === 'pool' && chip.parentElement && chip.parentElement.classList.contains('drop-zone')) returnChipToPool(chip); draggedChip = null; }, { passive: false });
+    }
+    document.querySelectorAll('#chips-pool .draggable-chip').forEach(makeChipDraggable);
+    dropZones.forEach(zone => {
+      zone.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; zone.closest('.match-row').classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.closest('.match-row').classList.remove('drag-over'));
+      zone.addEventListener('drop', e => { e.preventDefault(); zone.closest('.match-row').classList.remove('drag-over'); if (draggedChip) { dropChipOnZone(draggedChip, zone); draggedChip = null; } });
+    });
+    chipsPool.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    chipsPool.addEventListener('drop', e => { e.preventDefault(); if (draggedChip && draggedChip.parentElement && draggedChip.parentElement.classList.contains('drop-zone')) returnChipToPool(draggedChip); });
+    ['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].forEach(id => { document.getElementById(id).addEventListener('change', function() { if (['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].filter(i => document.getElementById(i).checked).length > 2) this.checked = false; updateProgressBar(); }); });
+    document.querySelectorAll('#pbq-section select').forEach(sel => { sel.addEventListener('change', updateProgressBar); });
     function renderTake() {
-      const quizQuestions = document.getElementById('quiz-questions'); const progress = document.getElementById('quiz-progress'); const finishRow = document.getElementById('finish-row'); const resultsContainer = document.getElementById('results-container'); const emptyQuiz = document.getElementById('empty-quiz');
+      const quizQuestions = document.getElementById('quiz-questions');
+      const progress = document.getElementById('quiz-progress');
       const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
-      if (validQuestions.length === 0) { quizQuestions.innerHTML = ''; finishRow.style.display = 'none'; resultsContainer.style.display = 'none'; emptyQuiz.style.display = 'block'; return; }
-      emptyQuiz.style.display = 'none'; resultsContainer.style.display = 'none'; selectedAnswers = {}; finishRow.style.display = 'flex';
-      progress.textContent = validQuestions.length + ' question' + (validQuestions.length !== 1 ? 's' : '');
+      const totalQuestions = PBQ_COUNT + validQuestions.length;
+      document.getElementById('exam-timer').style.display = 'flex';
+      document.getElementById('progress-bar-wrap').style.display = 'block';
+      timerSeconds = EXAM_MINUTES * 60;
+      document.getElementById('timer-display').textContent = formatTime(timerSeconds);
+      document.getElementById('exam-timer').classList.remove('low');
+      startTimer();
+      document.getElementById('progress-bar').style.width = '0%';
+      progress.textContent = totalQuestions > 0 ? ('Questions 1–' + totalQuestions + ' (' + PBQ_COUNT + ' PBQs' + (validQuestions.length ? ' + ' + validQuestions.length + ' multiple choice' : '') + ') • 90 min') : (PBQ_COUNT + ' PBQs • 90 min');
+      document.getElementById('mc-section-label').style.display = validQuestions.length > 0 ? 'block' : 'none';
       quizQuestions.innerHTML = '';
-      validQuestions.forEach((q, index) => { const opts = q.options.filter(o => o && o.trim()); const block = document.createElement('div'); block.className = 'quiz-question'; block.innerHTML = `<h2>${index + 1}. ${escapeHtml(q.text)}</h2>${opts.map((opt, i) => `<button type="button" class="quiz-option" data-q="${index}" data-a="${i}">${escapeHtml(opt)}</button>`).join('')}`; quizQuestions.appendChild(block); });
-      quizQuestions.querySelectorAll('.quiz-option').forEach(btn => { btn.addEventListener('click', () => { const qIndex = parseInt(btn.dataset.q, 10); const aIndex = parseInt(btn.dataset.a, 10); selectedAnswers[qIndex] = aIndex; btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }); });
+      validQuestions.forEach((q, index) => {
+        const opts = q.options.filter(o => o && o.trim());
+        const block = document.createElement('div');
+        block.className = 'quiz-question';
+        const hint = q.multiSelect ? '<p class="multiselect-hint" style="margin:0.25rem 0 0.5rem;">(Select all that apply)</p>' : '';
+        block.innerHTML = '<h2>' + (PBQ_COUNT + index + 1) + '. ' + escapeHtml(q.text) + '</h2>' + hint + opts.map((opt, i) => '<button type="button" class="quiz-option" data-q="' + index + '" data-a="' + i + '" data-multi="' + (q.multiSelect ? '1' : '0') + '">' + escapeHtml(opt) + '</button>').join('');
+        quizQuestions.appendChild(block);
+      });
+      quizQuestions.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const qIndex = parseInt(btn.dataset.q, 10);
+          const aIndex = parseInt(btn.dataset.a, 10);
+          const isMulti = btn.dataset.multi === '1';
+          if (isMulti) {
+            if (!Array.isArray(selectedAnswers[qIndex])) selectedAnswers[qIndex] = [];
+            const arr = selectedAnswers[qIndex];
+            const idx = arr.indexOf(aIndex);
+            if (idx > -1) { arr.splice(idx, 1); btn.classList.remove('selected'); }
+            else { arr.push(aIndex); btn.classList.add('selected'); }
+          } else {
+            selectedAnswers[qIndex] = aIndex;
+            btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+          }
+          updateProgressBar();
+        });
+      });
     }
     document.getElementById('finish-btn').addEventListener('click', () => {
+      const pbqScore = gradePbqs();
+      const pbqFeedback = getPbqFeedback();
       const validQuestions = questions.filter(q => q.text && q.options && q.options.filter(o => o && o.trim()).length >= 2);
-      let correct = 0; const results = validQuestions.map((q, index) => { const opts = q.options.filter(o => o && o.trim()); const userChoice = selectedAnswers[index]; const isCorrect = userChoice === q.correctIndex; if (isCorrect) correct++; return { text: q.text, correct: isCorrect, userAnswer: userChoice !== undefined ? opts[userChoice] : '(not answered)', correctAnswer: opts[q.correctIndex] }; });
-      const score = validQuestions.length ? Math.round((correct / validQuestions.length) * 100) : 0;
-      const resultsContainer = document.getElementById('results-container'); resultsContainer.style.display = 'block';
-      resultsContainer.innerHTML = `<div class="results-card"><div class="score-big">${correct}/${validQuestions.length}</div><div class="score-label">${score}%</div>${results.map(r => `<div class="result-item"><span class="result-icon ${r.correct ? 'correct' : 'wrong'}">${r.correct ? '✓' : '✕'}</span><div class="result-text"><strong>${escapeHtml(r.text)}</strong><span>Your answer: ${escapeHtml(r.userAnswer)}${!r.correct ? ' — Correct: ' + escapeHtml(r.correctAnswer) : ''}</span></div></div>`).join('')}</div><div class="finish-row" style="margin-top:1rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take quiz again</button></div>`;
-      document.getElementById('quiz-questions').style.display = 'none'; document.getElementById('finish-row').style.display = 'none'; document.getElementById('quiz-progress').textContent = 'Results';
-      resultsContainer.querySelector('#retake-btn').addEventListener('click', () => { resultsContainer.style.display = 'none'; resultsContainer.innerHTML = ''; renderTake(); document.getElementById('quiz-questions').style.display = ''; });
+      let mcScore = 0;
+      const mcResults = validQuestions.map((q, index) => {
+        const opts = q.options.filter(o => o && o.trim());
+        const userChoice = selectedAnswers[index];
+        let isCorrect, userAnswer, correctAnswer;
+        if (q.multiSelect) {
+          const picked = Array.isArray(userChoice) ? [...userChoice].sort() : [];
+          const correct = Array.isArray(q.correctValues) ? [...q.correctValues].sort() : [];
+          isCorrect = picked.length === correct.length && picked.every((v, i) => v === correct[i]);
+          userAnswer = picked.length > 0 ? picked.map(i => opts[i]).join(', ') : '(not answered)';
+          correctAnswer = correct.map(i => opts[i]).join(', ');
+        } else {
+          isCorrect = userChoice === q.correctIndex;
+          userAnswer = userChoice !== undefined ? opts[userChoice] : '(not answered)';
+          correctAnswer = opts[q.correctIndex];
+        }
+        if (isCorrect) mcScore++;
+        return { text: q.text, correct: isCorrect, userAnswer: userAnswer, correctAnswer: correctAnswer };
+      });
+      const total = PBQ_COUNT + validQuestions.length;
+      const totalCorrect = pbqScore + mcScore;
+      const pct = total > 0 ? Math.round((totalCorrect / total) * 100) : 0;
+      stopTimer();
+      document.getElementById('exam-timer').style.display = 'none';
+      document.getElementById('progress-bar-wrap').style.display = 'none';
+      document.getElementById('pbq-section').style.display = 'none';
+      document.getElementById('quiz-questions').style.display = 'none';
+      document.getElementById('finish-btn').style.display = 'none';
+      document.getElementById('mc-section-label').style.display = 'none';
+      document.getElementById('quiz-progress').textContent = 'Results';
+      document.getElementById('progress-bar').style.width = '100%';
+      let resultsHtml = '<div class="results-card"><div class="score-big">' + totalCorrect + ' / ' + total + '</div><div class="score-label">' + pct + '%</div>';
+      resultsHtml += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1rem">' + pbqFeedback.map(f => '<span style="padding:0.3rem 0.7rem;border-radius:6px;font-size:0.8rem;font-weight:600;background:' + (f.ok ? 'rgba(34,197,94,0.15);color:#22c55e' : 'rgba(239,68,68,0.15);color:#ef4444') + '">PBQ ' + f.n + ' ' + (f.ok ? '✓' : '✕') + '</span>').join('') + '</div>';
+      resultsHtml += mcResults.map(r => '<div class="result-item"><span class="result-icon ' + (r.correct ? 'correct' : 'wrong') + '">' + (r.correct ? '✓' : '✕') + '</span><div class="result-text"><strong>' + escapeHtml(r.text) + '</strong><span>Your answer: ' + escapeHtml(r.userAnswer) + (r.correct ? '' : ' — Correct: ' + escapeHtml(r.correctAnswer)) + '</span></div></div>').join('');
+      resultsHtml += '<div class="finish-row" style="margin-top:1.5rem"><button type="button" class="btn btn-ghost" id="retake-btn">Take test again</button></div></div>';
+      document.getElementById('results-container').innerHTML = resultsHtml;
+      document.getElementById('results-container').style.display = 'block';
+      document.getElementById('retake-btn').addEventListener('click', () => {
+        document.getElementById('results-container').style.display = 'none';
+        document.getElementById('results-container').innerHTML = '';
+        document.getElementById('pbq-section').style.display = 'block';
+        document.getElementById('quiz-questions').style.display = validQuestions.length > 0 ? 'block' : 'none';
+        document.getElementById('finish-btn').style.display = 'block';
+        if (validQuestions.length > 0) document.getElementById('mc-section-label').style.display = 'block';
+        document.getElementById('quiz-progress').textContent = (PBQ_COUNT + validQuestions.length) + ' questions • 90 min';
+        document.getElementById('exam-timer').style.display = 'flex';
+        document.getElementById('progress-bar-wrap').style.display = 'block';
+        document.getElementById('progress-bar').style.width = '0%';
+        resetPbqs();
+        matchAssignments = {};
+        selectedAnswers = {};
+        timerSeconds = EXAM_MINUTES * 60;
+        document.getElementById('timer-display').textContent = formatTime(timerSeconds);
+        document.getElementById('exam-timer').classList.remove('low');
+        startTimer();
+        renderTake();
+      });
     });
+    function resetPbqs() {
+      document.getElementById('pbq1-cause').value = '';
+      document.getElementById('pbq1-action1').value = '';
+      document.getElementById('pbq1-action2').value = '';
+      document.getElementById('pbq1-tool').value = '';
+      document.getElementById('pbq2-step1').value = '';
+      document.getElementById('pbq2-type').value = '';
+      ['pbq2-prev-A','pbq2-prev-B','pbq2-prev-C','pbq2-prev-D'].forEach(id => { document.getElementById(id).checked = false; });
+      document.getElementById('pbq3-first').value = '';
+      document.getElementById('pbq3-remove').value = '';
+      document.getElementById('pbq3-inherit').value = '';
+      document.getElementById('pbq3-priority').value = '';
+      document.getElementById('pbq4-issue').value = '';
+      document.getElementById('pbq4-cmd1').value = '';
+      document.getElementById('pbq4-cmd2').value = '';
+      document.getElementById('pbq4-service').value = '';
+      document.querySelectorAll('.drop-zone').forEach(z => { z.textContent = ''; });
+      chipsPool.innerHTML = '<span class="draggable-chip" draggable="true" data-protocol="BitLocker">BitLocker</span><span class="draggable-chip" draggable="true" data-protocol="Account lockout policy">Account lockout policy</span><span class="draggable-chip" draggable="true" data-protocol="Removable storage restriction">Removable storage restriction</span><span class="draggable-chip" draggable="true" data-protocol="System image backup">System image backup</span>';
+      chipsPool.querySelectorAll('.draggable-chip').forEach(makeChipDraggable);
+    }
     renderTake();
   </script>
 </body>
